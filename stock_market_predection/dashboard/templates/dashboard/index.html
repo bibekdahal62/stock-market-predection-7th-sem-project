@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% load humanize %}
+
+{% block extracss %}
+
+<link rel="stylesheet" href="{% static 'css/style_dashboard.css' %}">
+
+{% endblock %}
+
+
+{% block content %}
+
+
+<!-- TICKER -->
+<div class="topbar">
+    <div class="ticker-wrap">
+        <div class="ticker" id="ticker"></div>
+    </div>
+</div>
+
+<!-- HEADER -->
+<header>
+    <div class="header-inner">
+        <a href="dashboard.html" class="logo">
+            <div class="logo-mark">NPS</div>
+            <div class="logo-text">
+                <span class="logo-name">NEPSE Predict</span>
+                <span class="logo-sub">Nepal Stock Exchange</span>
+            </div>
+        </a>
+        <nav>
+            <a href="dashboard.html" class="nav-btn active">Market Dashboard</a>
+            <a href="prediction.html" class="nav-btn">Stock Prediction</a>
+        </nav>
+        {% if market_status == "OPEN" %}
+        <div class="live-pill"><span class="live-dot"></span> OPEN</div>
+        {% else %}
+        <div class="close-pill"><span class="close-dot"></span> CLOSE</div>
+        {% endif %}
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- INDEX BANNER -->
+    <div class="index-banner">
+        <div>
+            <span class="index-label">NEPSE Index</span>
+            <div class="index-main">
+                <span class="index-val" id="nepse-val">{{ nepse_index }}</span>
+                <span class="index-chg up" id="nepse-chg">▲ {{ nepse_index_change }} ({{ nepse_index_per_change }}%)</span>
+            </div>
+            <div class="datetime" id="clock" style="margin-top:4px"></div>
+        </div>
+        <div class="index-meta">
+            <div class="meta-item">
+                <div class="meta-label">Turnover</div>
+                <div class="meta-val">NPR {{ trunover|floatformat:2 }}B</div>
+                <div class="meta-sub up">▲ +8.3%</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Shares</div>
+                <div class="meta-val">{{ shares|floatformat:2 }}M</div>
+                <div class="meta-sub dn">▼ −2.1%</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Transactions</div>
+                <div class="meta-val">{{ transactions|floatformat:0 | intcomma}}</div>
+                <div class="meta-sub up">▲ +5.7%</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Market Cap</div>
+                <div class="meta-val">{{ captalizaton|floatformat:2 }}T</div>
+                <div class="meta-sub up">▲ +0.43%</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Float Market Cap</div>
+                <div class="meta-val">{{ floatcaptalizaton|floatformat:2 }}T</div>
+                <div class="meta-sub up">▲ +0.43%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="grid-4">
+        <div class="stat-card">
+            <div class="stat-label">Advancing</div>
+            <div class="stat-val up">142</div>
+            <div class="stat-change up">▲ stocks gaining today</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Declining</div>
+            <div class="stat-val dn">89</div>
+            <div class="stat-change dn">▼ stocks falling today</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Unchanged</div>
+            <div class="stat-val" style="color:var(--gray-600)">34</div>
+            <div class="stat-change" style="color:var(--gray-400)">— no movement</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Listed</div>
+            <div class="stat-val" style="color:var(--blue)">265</div>
+            <div class="stat-change" style="color:var(--gray-400)">companies on NEPSE</div>
+        </div>
+    </div>
+
+    <!-- CHART + MOVERS -->
+    <div class="grid-3">
+        <div class="card col-span-2">
+            <div class="card-head">
+                <span class="card-title">NEPSE Index — Intraday Chart</span>
+                <div class="tf-group">
+                    <button class="tf-btn active" onclick="switchTF(this,'1D')">1D</button>
+                    <button class="tf-btn" onclick="switchTF(this,'1W')">1W</button>
+                    <button class="tf-btn" onclick="switchTF(this,'1M')">1M</button>
+                    <button class="tf-btn" onclick="switchTF(this,'3M')">3M</button>
+                </div>
+            </div>
+            <div class="card-body" style="padding-bottom:12px">
+                <div style="position:relative;width:100%;height:240px">
+                    <canvas id="indexChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><span class="card-title">Top Movers</span></div>
+            <div class="mover-label gain">Gainers</div>
+            <table>
+                <thead>
+                    <tr>
+                        <td>Symbol</td>
+                        <td>LTP</td>
+                        <td>Point Change</td>
+                        <td>% Change</td>
+                    </tr>
+                </thead>
+                <tbody id="gainers-body">
+                    {% for stock in gainers %}
+                    <tr>
+                        <td>
+                            <div class="sym">{{ stock.symbol }}</div>
+                        </td>
+                        <td>{{ stock.ltp }}</td>
+                        <td><span class="badge badge-up">{{ stock.pointChange }}</span></td>
+                        <td><span class="badge badge-up">{{ stock.percentageChange }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="mover-label loss">Losers</div>
+            <table>
+                <thead>
+                    <tr>
+                        <td>Symbol</td>
+                        <td>LTP</td>
+                        <td>Point Change</td>
+                        <td>% Change</td>
+                    </tr>
+                </thead>
+                <tbody id="losers-body">
+                    {% for stock in loosers %}
+                    <tr>
+                        <td>
+                            <div class="sym">{{ stock.symbol }}</div>
+                        </td>
+                        <td>{{ stock.ltp }}</td>
+                        <td><span class="badge badge-dn">{{ stock.pointChange }}</span></td>
+                        <td><span class="badge badge-dn">{{ stock.percentageChange }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SECTOR + ACTIVE -->
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-head">
+                <span class="card-title">Sector Performance</span>
+                <span class="datetime">Today</span>
+            </div>
+            <div class="card-body" id="sector-list"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-head">
+                <span class="card-title">Most Active Stocks</span>
+                <span class="datetime">By Volume</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>LTP</th>
+                        <th>Change</th>
+                        <th>Volume</th>
+                    </tr>
+                </thead>
+                <tbody id="active-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}

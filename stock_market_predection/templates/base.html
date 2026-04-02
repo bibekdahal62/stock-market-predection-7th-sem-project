@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% block title %} Home {% endblock %}
+    </title>
+    {% block extracss %} {% endblock %}
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+
+    <header>
+
+    </header>
+
+    <div class="site-section">
+
+        {% block content %}
+
+        {% endblock %}
+
+    </div>
+
+    <footer>
+
+
+    </footer>
+
+</body>
+
+</html>
