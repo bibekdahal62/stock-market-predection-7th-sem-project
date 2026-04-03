@@ -1,3 +1,7 @@
+/* ─────────────────────────────────────────
+   NEPSE Dashboard — Stylesheet
+   ───────────────────────────────────────── */
+
 *,
 *::before,
 *::after {
@@ -39,7 +43,7 @@ body {
     min-height: 100vh;
 }
 
-/* TICKER */
+/* ── TICKER ── */
 .topbar {
     background: var(--blue);
     color: #fff;
@@ -91,7 +95,7 @@ body {
     }
 }
 
-/* HEADER */
+/* ── HEADER ── */
 header {
     background: var(--white);
     border-bottom: 3px solid var(--green);
@@ -239,14 +243,14 @@ nav {
     }
 }
 
-/* LAYOUT */
+/* ── LAYOUT ── */
 .container {
     max-width: 1280px;
     margin: 0 auto;
     padding: 20px 24px;
 }
 
-/* INDEX BANNER */
+/* ── INDEX BANNER ── */
 .index-banner {
     background: var(--white);
     border: 1px solid var(--gray-200);
@@ -333,7 +337,7 @@ nav {
     margin-top: 1px;
 }
 
-/* GRIDS */
+/* ── GRIDS ── */
 .grid-4 {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -358,7 +362,7 @@ nav {
     grid-column: span 2;
 }
 
-/* CARDS */
+/* ── CARDS ── */
 .card {
     background: var(--white);
     border: 1px solid var(--gray-200);
@@ -387,7 +391,7 @@ nav {
     padding: 16px;
 }
 
-/* STAT CARDS */
+/* ── STAT CARDS ── */
 .stat-card {
     background: var(--white);
     border: 1px solid var(--gray-200);
@@ -426,7 +430,7 @@ nav {
     color: var(--red);
 }
 
-/* TABLE */
+/* ── TABLE ── */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -507,7 +511,7 @@ td:first-child {
     color: var(--red);
 }
 
-/* SECTORS */
+/* ── SECTORS ── */
 .sector-row {
     display: flex;
     align-items: center;
@@ -558,7 +562,7 @@ td:first-child {
     font-weight: 500;
 }
 
-/* TIME FILTER */
+/* ── TIME FILTER ── */
 .tf-group {
     display: flex;
     gap: 3px;
@@ -592,7 +596,7 @@ td:first-child {
     font-family: var(--mono);
 }
 
-/* MOVER SECTION LABEL */
+/* ── MOVER LABELS ── */
 .mover-label {
     padding: 8px 12px;
     font-size: 10px;
@@ -612,6 +616,7 @@ td:first-child {
     color: var(--red);
 }
 
+/* ── FOOTER ── */
 footer {
     background: var(--gray-900);
     color: var(--gray-400);
@@ -626,22 +631,307 @@ footer span {
     color: var(--gray-600);
 }
 
-@media (max-width: 900px) {
 
-    .grid-3,
+/* ═══════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+═══════════════════════════════════════════ */
+
+/* ── Tablet landscape: ≤ 1024px ── */
+@media (max-width: 1024px) {
+    .container {
+        padding: 16px;
+    }
+
+    .header-inner {
+        padding: 0 16px;
+        gap: 16px;
+    }
+
+    .index-meta {
+        gap: 20px;
+    }
+
+    .meta-val {
+        font-size: 13px;
+    }
+
+    .grid-3 {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .col-span-2 {
+        grid-column: span 2;
+    }
+}
+
+/* ── Tablet portrait: ≤ 900px ──
+   index-meta moves below the index value
+   instead of disappearing                  */
+@media (max-width: 900px) {
+    .header-inner {
+        gap: 12px;
+    }
+
+    .logo-sub {
+        display: none;
+    }
+
+    .live-pill {
+        display: none;
+    }
+
+    .index-val {
+        font-size: 22px;
+    }
+
+    /* Banner stacks vertically; meta wraps into a 3-col grid below */
+    .index-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .index-meta {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        width: 100%;
+    }
+
+    .meta-item {
+        text-align: left;
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        padding: 8px 10px;
+    }
+
+    .meta-label {
+        font-size: 9px;
+    }
+
+    .meta-val {
+        font-size: 13px;
+        margin-top: 2px;
+    }
+
+    .meta-sub {
+        font-size: 9px;
+    }
+
     .grid-4 {
         grid-template-columns: 1fr 1fr;
+    }
+
+    .grid-3 {
+        grid-template-columns: 1fr;
     }
 
     .grid-2 {
         grid-template-columns: 1fr;
     }
 
-    .index-meta {
-        display: none;
-    }
-
     .col-span-2 {
         grid-column: span 1;
+    }
+
+    .card-head {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
+
+/* ── Mobile large: ≤ 640px ── */
+@media (max-width: 640px) {
+    .container {
+        padding: 12px;
+    }
+
+    .header-inner {
+        padding: 0 12px;
+        height: 52px;
+    }
+
+    .logo-name {
+        font-size: 14px;
+    }
+
+    .logo-mark {
+        width: 30px;
+        height: 30px;
+        font-size: 11px;
+    }
+
+    .nav-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .index-banner {
+        padding: 12px 14px;
+    }
+
+    .index-val {
+        font-size: 20px;
+    }
+
+    .index-chg {
+        font-size: 12px;
+    }
+
+    /* Meta grid becomes 2 columns on smaller tablets / large phones */
+    .index-meta {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .grid-4 {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .stat-val {
+        font-size: 18px;
+    }
+
+    .stat-label {
+        font-size: 9px;
+    }
+
+    .stat-change {
+        font-size: 10px;
+    }
+
+    .card-title {
+        font-size: 11px;
+    }
+
+    .card-body {
+        padding: 12px;
+    }
+
+    .card-head {
+        padding: 10px 12px;
+    }
+
+    td {
+        padding: 7px 8px;
+        font-size: 12px;
+    }
+
+    thead th {
+        padding: 6px 8px;
+        font-size: 9px;
+    }
+
+    .sector-name {
+        width: 80px;
+        font-size: 11px;
+    }
+
+    .sector-pct {
+        font-size: 10px;
+        width: 40px;
+    }
+
+    .mover-label {
+        padding: 6px 10px;
+    }
+
+    footer {
+        font-size: 10px;
+        padding: 12px 16px;
+    }
+}
+
+/* ── Mobile small: ≤ 420px ── */
+@media (max-width: 420px) {
+    .header-inner {
+        gap: 8px;
+    }
+
+    .nav-btn {
+        padding: 5px 8px;
+        font-size: 11px;
+    }
+
+    .logo-mark {
+        width: 28px;
+        height: 28px;
+        font-size: 10px;
+    }
+
+    .logo-name {
+        font-size: 13px;
+    }
+
+    .index-val {
+        font-size: 18px;
+    }
+
+    .index-chg {
+        font-size: 11px;
+        padding: 2px 6px;
+    }
+
+    /* All 5 meta items in a 2-col grid on the smallest screens */
+    .index-meta {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .grid-4 {
+        gap: 6px;
+        margin-bottom: 12px;
+    }
+
+    .stat-val {
+        font-size: 16px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+
+    .index-banner {
+        padding: 10px 12px;
+        margin-bottom: 12px;
+    }
+
+    .grid-3,
+    .grid-2 {
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    td {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+
+    .sym {
+        font-size: 12px;
+    }
+
+    .co-name {
+        font-size: 10px;
+    }
+
+    .badge {
+        font-size: 10px;
+        padding: 1px 6px;
+    }
+
+    .datetime {
+        font-size: 10px;
+    }
+
+    .sector-name {
+        width: 70px;
+        font-size: 10px;
+    }
+
+    .tf-btn {
+        padding: 2px 7px;
+        font-size: 10px;
     }
 }
