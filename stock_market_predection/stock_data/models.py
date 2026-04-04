@@ -42,3 +42,36 @@ class UPPER(models.Model):
 
     def __str__(self):
         return f"{self.symbol} - {self.date}"
+    
+
+class NepseIndex(models.Model):
+   
+    date = models.DateField()
+
+    close = models.DecimalField(max_digits=10, decimal_places=2)
+    high = models.DecimalField(max_digits=10, decimal_places=2)
+    low = models.DecimalField(max_digits=10, decimal_places=2)
+
+    absolute_change = models.DecimalField(max_digits=10, decimal_places=2)
+    percentage_change = models.DecimalField(max_digits=6, decimal_places=2)
+
+    week_52_high = models.DecimalField(max_digits=10, decimal_places=2)
+    week_52_low = models.DecimalField(max_digits=10, decimal_places=2)
+
+    turnover_values = models.DecimalField(max_digits=20, decimal_places=2)
+    turnover_volume = models.BigIntegerField()
+    total_transaction = models.BigIntegerField()
+
+    def __str__(self):
+        return f"{self.date} - {self.close}"
+
+
+class NepseIndexData(models.Model):
+    timestamp = models.DateTimeField()  # manual date & time
+    nepse_index = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.timestamp} - {self.nepse_index}"
