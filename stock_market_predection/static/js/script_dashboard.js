@@ -1,137 +1,40 @@
 let marketStatusInterval = null;
-let marketIndexInterval = null;
-let advancingDecliningStocksInterval = null;
-let gainersInterval = null;
-let loosersInterval = null;
-let sectorsInterval = null;
-let activeStocksInterval = null;
 
-async function marketIndex() {
-    const res = await fetch('/api/market-index/');
-    const data = await res.json();
 
+async function updateData() {
+    const res = await fetch('/api/stock-data/');
+    const data = await res.json()
+
+
+    // Market index display
     const nepseValue = document.querySelector('#nepse-val');
     const nepseChange = document.querySelector('#nepse-chg');
 
     nepseValue.innerText = data.nepseIndex;
+    console.log("nepse index", data.nepseIndex);
     if (data.nepseValChange < 0) {
-        nepseChange.innerText = '▼ ' + data.nepseValChange + '(' + data.nepsePerChange + ')';
+        nepseChange.innerText = '▼ ' + data.nepseValChange + '(' + data.nepsePerChange + ') %';
         nepseChange.classList.remove('up');
         nepseChange.classList.add('dn');
     } else {
-        nepseChange.innerText = '▲ ' + data.nepseValChange + '(' + data.nepsePerChange + ')';
+        nepseChange.innerText = '▲ ' + data.nepseValChange + '(' + data.nepsePerChange + ') %';
         nepseChange.classList.remove('dn');
         nepseChange.classList.add('up');
     }
-    // console.log("Index updated..");
-}
 
-marketIndex();
+    // console.log(data)
 
 
-async function marketStatus() {
-    const res = await fetch('/api/market-status/');
-    const data = await res.json();
+    //Market trunover, shares etc
 
-    const status = document.querySelector('#market-status');
-    const time = document.querySelector('#last-update-time');
+    document.querySelector('#trunover').innerText = `NPR ${data.trunover} B`;
+    document.querySelector('#shares').innerText = `${data.shares} M`;
+    document.querySelector('#transactions').innerText = `${data.transactions.toLocaleString('en-US')}`;
+    document.querySelector('#scripts').innerText = `${data.scripts}`;
 
-    const date = new Date(data.asOf);
 
-    const formatted = date.toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true
-    });
 
-    if (data.isOPen == 'OPEN') {
-        status.innerHTML = '<span class="live-dot"></span> OPEN</div>'
-        status.classList.remove('close-pill');
-        status.classList.add('live-pill');
-        time.innerText = 'As of: ' + formatted;
-        // 👉 start interval ONLY if not already running
-        if (!marketStatusInterval) {
-            marketStatusInterval = setInterval(marketStatus, 10000); // 10 sec
-        }
-
-        if (!marketIndexInterval) {
-            marketIndexInterval = setInterval(marketStatus, 10000); // 10 sec
-        }
-
-        if (!advancingDecliningStocksInterval) {
-            advancingDecliningStocksInterval = setInterval(marketStatus, 10000); // 10 sec
-        }
-
-        if (!gainersInterval) {
-            gainersInterval = setInterval(marketStatus, 10000); // 10 sec
-        }
-
-        if (!loosersInterval) {
-            loosersInterval = setInterval(marketStatus, 10000); // 10 sec
-        }
-
-        if (!sectorsInterval) {
-            sectorsInterval = setInterval(marketStatus, 10000); // 10 sec
-        }
-
-        if (!activeStocksInterval) {
-            activeStocksInterval = setInterval(marketStatus, 10000); // 10 sec
-        }
-    } else {
-        status.innerHTML = '<span class="close-dot"></span> CLOSE</div>'
-        status.classList.remove('live-pill');
-        status.classList.add('close-pill');
-        time.innerText = 'As of: ' + formatted;
-
-        // 👉 stop auto refresh when market is closed
-        if (marketStatusInterval) {
-            clearInterval(marketStatusInterval);
-            marketStatusInterval = null;
-        }
-
-        if (marketIndexInterval) {
-            clearInterval(marketIndexInterval);
-            marketIndexInterval = null;
-        }
-
-        if (advancingDecliningStocksInterval) {
-            clearInterval(advancingDecliningStocksInterval);
-            advancingDecliningStocksInterval = null;
-        }
-
-        if (gainersInterval) {
-            clearInterval(gainersInterval);
-            gainersInterval = null;
-        }
-
-        if (loosersInterval) {
-            clearInterval(loosersInterval);
-            loosersInterval = null;
-        }
-
-        if (sectorsInterval) {
-            clearInterval(sectorsInterval);
-            sectorsInterval = null;
-        }
-
-        if (activeStocksInterval) {
-            clearInterval(activeStocksInterval);
-            activeStocksInterval = null;
-        }
-    }
-
-}
-
-marketStatus();
-
-async function advancingDecliningStocks() {
-    const res = await fetch('/api/stocks-status/');
-    const data = await res.json();
-
+    //Advancing Declining Stocks
     const advancing = document.querySelector('#advancing');
     const declining = document.querySelector('#declining');
     const unchanged = document.querySelector('#unchanged');
@@ -142,40 +45,20 @@ async function advancingDecliningStocks() {
     unchanged.innerText = data.unchanged;
     totalListed.innerText = data.total_listed;
 
-}
 
-advancingDecliningStocks();
-
-async function gainers() {
-    const res = await fetch('/api/gainers/');
-    const data = await res.json();
-
+    //Top Gainers
     document.getElementById('gainers-body').innerHTML = data.gainers.map(d =>
         `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</td><td><span class="badge badge-up">${d.pointChange}</span></td><td><span class="badge badge-up">${d.percentageChange}</span></td></tr>`
     ).join('');
 
-    // console.log(data.gainers)
-}
 
-gainers();
-
-async function loosers() {
-    const res = await fetch('/api/loosers/');
-    const data = await res.json();
-
+    //Top Loosers
     document.getElementById('losers-body').innerHTML = data.loosers.map(d =>
         `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</td><td><span class="badge badge-dn">${d.pointChange}</span></td><td><span class="badge badge-dn">${d.percentageChange}</span></td></tr>`
     ).join('');
-    // console.log('loosers')
-}
-
-loosers();
 
 
-async function sectors() {
-    const res = await fetch('/api/sectors/');
-    const data = await res.json();
-
+    //Sectors
     const changes = data.sectors.map(s => Math.abs(s.perChange ?? s.perachange ?? 0));
     const maxPct = Math.max(...changes, 0.01); // prevent divide by zero
 
@@ -197,16 +80,9 @@ async function sectors() {
             </span>
         </div>`;
     }).join('');
-}
 
-sectors();
 
-async function activeStocks() {
-    const res = await fetch('/api/active-stocks/');
-    const data = await res.json();
-
-    // console.log(data.active_stocks)
-
+    //Active stocks
     document.getElementById('active-body').innerHTML = data.active_stocks.map(d =>
         `<tr>
       <td><div class="sym">${d.symbol}</div><div class="co-name">${d.securityName}</div></td>
@@ -215,10 +91,209 @@ async function activeStocks() {
       <td>${d.totalTradeQuantity.toLocaleString()}</td>
     </tr>`
     ).join('');
+    // console.log('Data Updated Successfilly....');
+
+    //Market Status display
+    const status = document.querySelector('#market-status');
+    const marketTime = document.querySelector('#last-update-time');
+
+    const date = new Date(data.asOf);
+
+    const formatted = date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    });
+    // console.log('market status: ', data.isOpen)
+
+    if (data.isOpen === 'OPEN') {
+        status.innerHTML = '<span class="live-dot"></span> OPEN</div>'
+        status.classList.remove('close-pill');
+        status.classList.add('live-pill');
+        marketTime.innerText = 'As of: ' + formatted;
+        // 👉 start interval ONLY if not already running
+        // if (!marketStatusInterval) {
+        //     marketStatusInterval = setInterval(updateData, 200000); // 10 sec
+        // }
+
+    } else {
+        status.innerHTML = '<span class="close-dot"></span> CLOSE</div>'
+        status.classList.remove('live-pill');
+        status.classList.add('close-pill');
+        marketTime.innerText = 'As of: ' + formatted;
+
+        // 👉 stop auto refresh when market is closed
+        // if (marketStatusInterval) {
+        //     clearInterval(marketStatusInterval);
+        //     marketStatusInterval = null;
+        // }
+
+    }
+
+
 }
 
-activeStocks();
+updateData();
 
+setInterval(updateData, 20000);
+
+// async function marketIndex() {
+//     const res = await fetch('/api/market-index/');
+//     const data = await res.json();
+
+//     const nepseValue = document.querySelector('#nepse-val');
+//     const nepseChange = document.querySelector('#nepse-chg');
+
+//     nepseValue.innerText = data.nepseIndex;
+//     console.log("nepse index", data.nepseIndex);
+//     if (data.nepseValChange < 0) {
+//         nepseChange.innerText = '▼ ' + data.nepseValChange + '(' + data.nepsePerChange + ') %';
+//         nepseChange.classList.remove('up');
+//         nepseChange.classList.add('dn');
+//     } else {
+//         nepseChange.innerText = '▲ ' + data.nepseValChange + '(' + data.nepsePerChange + ') %';
+//         nepseChange.classList.remove('dn');
+//         nepseChange.classList.add('up');
+//     }
+//     // console.log("Index updated..");
+// }
+
+// async function marketStatus() {
+//     const res = await fetch('/api/market-status/');
+//     const data = await res.json();
+
+//     const status = document.querySelector('#market-status');
+//     const time = document.querySelector('#last-update-time');
+
+//     const date = new Date(data.asOf);
+
+//     const formatted = date.toLocaleString('en-US', {
+//         year: 'numeric',
+//         month: 'long',
+//         day: 'numeric',
+//         hour: '2-digit',
+//         minute: '2-digit',
+//         second: '2-digit',
+//         hour12: true
+//     });
+//     // console.log('market status: ', data.isOpen)
+
+//     if (data.isOpen === 'OPEN') {
+//         status.innerHTML = '<span class="live-dot"></span> OPEN</div>'
+//         status.classList.remove('close-pill');
+//         status.classList.add('live-pill');
+//         time.innerText = 'As of: ' + formatted;
+//         // 👉 start interval ONLY if not already running
+//         if (!marketStatusInterval) {
+//             marketStatusInterval = setInterval(marketStatus, 120000); // 10 sec
+//         }
+
+//     } else {
+//         status.innerHTML = '<span class="close-dot"></span> CLOSE</div>'
+//         status.classList.remove('live-pill');
+//         status.classList.add('close-pill');
+//         time.innerText = 'As of: ' + formatted;
+
+//         // 👉 stop auto refresh when market is closed
+//         if (marketStatusInterval) {
+//             clearInterval(marketStatusInterval);
+//             marketStatusInterval = null;
+//         }
+
+//     }
+
+// }
+
+
+
+// async function advancingDecliningStocks() {
+//     const res = await fetch('/api/stocks-status/');
+//     const data = await res.json();
+
+//     const advancing = document.querySelector('#advancing');
+//     const declining = document.querySelector('#declining');
+//     const unchanged = document.querySelector('#unchanged');
+//     const totalListed = document.querySelector('#total-listed');
+
+//     advancing.innerText = data.advancing;
+//     declining.innerText = data.declining;
+//     unchanged.innerText = data.unchanged;
+//     totalListed.innerText = data.total_listed;
+
+// }
+
+
+// async function gainers() {
+//     const res = await fetch('/api/gainers/');
+//     const data = await res.json();
+
+//     document.getElementById('gainers-body').innerHTML = data.gainers.map(d =>
+//         `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</td><td><span class="badge badge-up">${d.pointChange}</span></td><td><span class="badge badge-up">${d.percentageChange}</span></td></tr>`
+//     ).join('');
+
+//     // console.log(data.gainers)
+// }
+
+
+// async function loosers() {
+//     const res = await fetch('/api/loosers/');
+//     const data = await res.json();
+
+//     document.getElementById('losers-body').innerHTML = data.loosers.map(d =>
+//         `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</td><td><span class="badge badge-dn">${d.pointChange}</span></td><td><span class="badge badge-dn">${d.percentageChange}</span></td></tr>`
+//     ).join('');
+//     // console.log('loosers')
+// }
+
+
+
+// async function sectors() {
+//     const res = await fetch('/api/sectors/');
+//     const data = await res.json();
+
+//     const changes = data.sectors.map(s => Math.abs(s.perChange ?? s.perachange ?? 0));
+//     const maxPct = Math.max(...changes, 0.01); // prevent divide by zero
+
+//     document.getElementById('sector-list').innerHTML = data.sectors.map(s => {
+
+//         const change = s.perChange ?? s.perachange ?? 0;
+//         const pos = change >= 0;
+
+//         const w = Math.round(Math.abs(change) / maxPct * 100);
+
+//         return `
+//         <div class="sector-row">
+//             <span class="sector-name">${s.index}</span>
+//             <div class="bar-track">
+//                 <div class="bar-fill ${pos ? 'pos' : 'neg'}" style="width:${w}%"></div>
+//             </div>
+//             <span class="sector-pct ${pos ? 'up' : 'dn'}">
+//                 ${pos ? '+' : ''}${change.toFixed(2)}%
+//             </span>
+//         </div>`;
+//     }).join('');
+// }
+
+
+// async function activeStocks() {
+//     const res = await fetch('/api/active-stocks/');
+//     const data = await res.json();
+
+//     // console.log(data.active_stocks)
+
+//     document.getElementById('active-body').innerHTML = data.active_stocks.map(d =>
+//         `<tr>
+//       <td><div class="sym">${d.symbol}</div><div class="co-name">${d.securityName}</div></td>
+//       <td>${d.lastTradedPrice}</td>
+//       <td><span class="badge ${d.percentageChange > 0 ? 'badge-up' : 'badge-dn'}">${d.percentageChange}</span></td>
+//       <td>${d.totalTradeQuantity.toLocaleString()}</td>
+//     </tr>`
+//     ).join('');
+// }
 
 
 //BELOW IS THE JS FOR THE CHART
@@ -235,22 +310,22 @@ async function fetchNepseData() {
     try {
         // Fetch daily intraday data for 1D view
         const dailyResponse = await fetch('/api/latest-chart/');
-        
+
         if (!dailyResponse.ok) throw new Error('API request failed');
-        
+
         const dailyDataResponse = await dailyResponse.json();
-        
+
         // Extract market status and data from the response
         currentMarketStatus = dailyDataResponse.market_status;
         const dailyData = dailyDataResponse.data;
-        
+
         // Fetch historical daily closing data for 1W, 1M, 3M views
         const historicalResponse = await fetch('/api/index-chart/');
-        
+
         if (!historicalResponse.ok) throw new Error('API request failed');
-        
+
         const historicalData_raw = await historicalResponse.json();
-        
+
         return {
             intraday: dailyData, // Intraday data (any interval: 1min, 5min, 10min, etc.)
             historical: historicalData_raw, // Daily closing data
@@ -265,16 +340,16 @@ async function fetchNepseData() {
 // Function to detect the time interval between data points
 function detectTimeInterval(data) {
     if (data.length < 2) return 10; // Default to 10 minutes if not enough data
-    
+
     // Get first two timestamps to calculate interval
     const timestamp1 = new Date(data[0].timestamp);
     const timestamp2 = new Date(data[1].timestamp);
-    
+
     // Calculate difference in minutes
     const diffMinutes = Math.abs(timestamp2 - timestamp1) / (1000 * 60);
-    
+
     console.log(`Detected time interval: ${diffMinutes} minutes`);
-    
+
     // Round to nearest common interval
     if (diffMinutes <= 1.5) return 1;
     if (diffMinutes <= 3) return 2;
@@ -289,10 +364,10 @@ function filterDataByTimeframe(data, tf) {
     if (tf === '1D') {
         // Return intraday data sorted chronologically
         const intradayData = [...data.intraday].reverse();
-        
+
         // Detect the time interval
         const interval = detectTimeInterval(intradayData);
-        
+
         // Log data info
         if (intradayData.length > 0) {
             const firstTimestamp = new Date(intradayData[0].timestamp);
@@ -301,7 +376,7 @@ function filterDataByTimeframe(data, tf) {
             console.log(`Time range: ${firstTimestamp.toLocaleTimeString()} to ${lastTimestamp.toLocaleTimeString()}`);
             // console.log(`Market Status: ${data.marketStatus}`);
         }
-        
+
         return {
             data: intradayData,
             interval: interval,
@@ -314,7 +389,7 @@ function filterDataByTimeframe(data, tf) {
             '1M': 30,     // Last 30 days
             '3M': 90      // Last 90 days
         }[tf] || 48;
-        
+
         return {
             data: data.historical.slice(0, points).reverse(),
             interval: 1440, // 24 hours in minutes for daily data
@@ -331,19 +406,19 @@ function formatLabels(data, tf, interval) {
             let hours = timestamp.getHours();
             const minutes = timestamp.getMinutes();
             const period = hours >= 12 ? 'PM' : 'AM';
-            
+
             // Convert to 12-hour format
             hours = hours % 12;
             hours = hours ? hours : 12;
-            
+
             const formattedMinutes = minutes.toString().padStart(2, '0');
-            
+
             // Show seconds if interval is 1 minute or less
             if (interval <= 1) {
                 const seconds = timestamp.getSeconds().toString().padStart(2, '0');
                 return `${hours}:${formattedMinutes}:${seconds} ${period}`;
             }
-            
+
             return `${hours}:${formattedMinutes} ${period}`;
         });
     } else if (tf === '1W') {
@@ -357,7 +432,7 @@ function formatLabels(data, tf, interval) {
             return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
         });
     }
-    
+
     return data.map(item => {
         const date = new Date(item.date);
         return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
@@ -371,7 +446,7 @@ async function buildIndexChart(tf) {
     if (ctx) {
         canvas.style.opacity = '0.7';
     }
-    
+
     // Fetch data if not already loaded
     if (allNepseData.length === 0 || historicalData.length === 0) {
         const fetchedData = await fetchNepseData();
@@ -379,16 +454,16 @@ async function buildIndexChart(tf) {
         historicalData = fetchedData.historical;
         currentMarketStatus = fetchedData.marketStatus;
     }
-    
+
     const dataForView = {
         intraday: allNepseData,
         historical: historicalData,
         marketStatus: currentMarketStatus
     };
-    
+
     // Filter data based on timeframe
     const { data: filteredData, interval, marketStatus: marketStatusForView } = filterDataByTimeframe(dataForView, tf);
-    
+
     if (filteredData.length === 0) {
         console.error('No data available for timeframe:', tf);
         // Show "No Data" message on chart
@@ -405,10 +480,10 @@ async function buildIndexChart(tf) {
         canvas.style.opacity = '1';
         return;
     }
-    
+
     // Extract values based on data type
     let closeValues, labels;
-    
+
     if (tf === '1D') {
         closeValues = filteredData.map(item => parseFloat(item.nepse_index));
         labels = formatLabels(filteredData, tf, interval);
@@ -416,10 +491,10 @@ async function buildIndexChart(tf) {
         closeValues = filteredData.map(item => parseFloat(item.close));
         labels = formatLabels(filteredData, tf, interval);
     }
-    
+
     // Calculate min and max for better y-axis
     let minValue, maxValue, padding;
-    
+
     if (closeValues.length === 1) {
         // If only one data point, add padding
         minValue = closeValues[0] - 20;
@@ -430,12 +505,12 @@ async function buildIndexChart(tf) {
         maxValue = Math.max(...closeValues);
         padding = (maxValue - minValue) * 0.1;
     }
-    
+
     // Destroy existing chart if it exists
     if (indexChart) {
         indexChart.destroy();
     }
-    
+
     // Configure x-axis based on data points count and interval
     let xAxisConfig = {
         display: true,
@@ -447,41 +522,41 @@ async function buildIndexChart(tf) {
             display: true,
             color: '#9aa2ae',
             font: {
-                size: 9,
+                size: 6,
                 family: 'IBM Plex Mono'
             }
         }
     };
-    
+
     // Dynamic x-axis configuration based on available data points
     const dataPointCount = filteredData.length;
-    
+
     if (tf === '1D') {
         // Calculate expected max points based on interval
         const marketHours = 4; // 11 AM to 3 PM = 4 hours
         const expectedMaxPoints = Math.floor((marketHours * 60) / interval) + 1;
-        
+
         // Get last update time
         let lastUpdateText = '';
         if (dataPointCount > 0) {
             const lastTimestamp = new Date(filteredData[filteredData.length - 1].timestamp);
             lastUpdateText = ` | Last: ${lastTimestamp.toLocaleTimeString()}`;
         }
-        
+
         // Set title based on data completeness and market status
         const percentageComplete = (dataPointCount / expectedMaxPoints * 100).toFixed(0);
-        
+
         // Add market status indicator to title
         const marketStatusIcon = marketStatusForView === "OPEN" ? "🟢" : "🔴";
         const marketStatusText = marketStatusForView === "OPEN" ? "MARKET OPEN" : "MARKET CLOSED";
-        
+
         if (marketStatusForView === "OPEN") {
             xAxisConfig.ticks.maxRotation = 30;
             xAxisConfig.ticks.minRotation = 30;
             xAxisConfig.ticks.autoSkip = false;
             xAxisConfig.title = {
                 display: true,
-                text: `${marketStatusIcon} ${marketStatusText} | ${interval}-min intervals | ${dataPointCount}/${expectedMaxPoints} points${lastUpdateText}`,
+                text: `${marketStatusIcon} ${marketStatusText}${lastUpdateText}`,
                 color: '#2ecc71',
                 font: { size: 10, family: 'IBM Plex Mono', weight: 'bold' },
                 padding: { top: 10 }
@@ -493,7 +568,7 @@ async function buildIndexChart(tf) {
                 xAxisConfig.ticks.autoSkip = false;
                 xAxisConfig.title = {
                     display: true,
-                    text: `${marketStatusIcon} ${marketStatusText} | ${interval}-min intervals | ${dataPointCount}/${expectedMaxPoints} points (${percentageComplete}%)${lastUpdateText}`,
+                    text: `${marketStatusIcon} ${marketStatusText}${lastUpdateText}`,
                     color: '#e74c3c',
                     font: { size: 10, family: 'IBM Plex Mono' },
                     padding: { top: 10 }
@@ -504,7 +579,7 @@ async function buildIndexChart(tf) {
                 xAxisConfig.ticks.autoSkip = false;
                 xAxisConfig.title = {
                     display: true,
-                    text: `${marketStatusIcon} ${marketStatusText} | ${dataPointCount}/${expectedMaxPoints} points (${interval}-min intervals)${lastUpdateText}`,
+                    text: `${marketStatusIcon} ${marketStatusText}${lastUpdateText}`,
                     color: '#f39c12',
                     font: { size: 10, family: 'IBM Plex Mono' },
                     padding: { top: 10 }
@@ -516,7 +591,7 @@ async function buildIndexChart(tf) {
                 xAxisConfig.ticks.maxTicksLimit = 8;
                 xAxisConfig.title = {
                     display: true,
-                    text: `${marketStatusIcon} ${marketStatusText} | Complete: ${dataPointCount} points at ${interval}-min intervals${lastUpdateText}`,
+                    text: `${marketStatusIcon} ${marketStatusText}${lastUpdateText}`,
                     color: '#27ae60',
                     font: { size: 10, family: 'IBM Plex Mono', weight: 'bold' },
                     padding: { top: 10 }
@@ -560,7 +635,7 @@ async function buildIndexChart(tf) {
             padding: { top: 10 }
         };
     }
-    
+
     // Create custom plugin to add left and right labels on x-axis when market is open
     const customXAxisLabels = {
         id: 'customXAxisLabels',
@@ -568,14 +643,14 @@ async function buildIndexChart(tf) {
             if (tf === '1D' && marketStatusForView === "OPEN") {
                 const ctx = chart.ctx;
                 const xAxis = chart.scales.x;
-                
+
                 // Get market open time (11:00 AM)
                 const marketOpenTime = new Date();
                 marketOpenTime.setHours(11, 0, 0, 0);
-                
+
                 // Get current time
                 const currentTime = new Date();
-                
+
                 // Format times for display
                 const formatTimeForDisplay = (date) => {
                     let hours = date.getHours();
@@ -585,31 +660,31 @@ async function buildIndexChart(tf) {
                     hours = hours ? hours : 12;
                     return `${hours}:${minutes.toString().padStart(2, '0')} ${period}`;
                 };
-                
+
                 const openTimeStr = formatTimeForDisplay(marketOpenTime);
                 const currentTimeStr = formatTimeForDisplay(currentTime);
-                
+
                 // Save context state
                 ctx.save();
                 ctx.font = 'bold 11px "IBM Plex Mono"';
                 ctx.fillStyle = '#0a7c4e';
                 ctx.shadowBlur = 0;
-                
+
                 // Get x-axis position (bottom of chart)
                 const xAxisY = xAxis.bottom + 15;
-                
+
                 // Draw left label (Market Open)
                 const leftX = xAxis.left;
                 ctx.fillStyle = '#2ecc71';
                 ctx.textAlign = 'left';
                 ctx.fillText(`🟢 OPEN: ${openTimeStr}`, leftX, xAxisY);
-                
+
                 // Draw right label (Current Time)
                 const rightX = xAxis.right;
                 ctx.fillStyle = '#3498db';
                 ctx.textAlign = 'right';
                 ctx.fillText(`🕐 CURRENT: ${currentTimeStr}`, rightX, xAxisY);
-                
+
                 // Draw separator line or dots
                 ctx.strokeStyle = 'rgba(46, 204, 113, 0.3)';
                 ctx.lineWidth = 1;
@@ -619,13 +694,13 @@ async function buildIndexChart(tf) {
                 ctx.lineTo(rightX, xAxis.bottom);
                 ctx.stroke();
                 ctx.setLineDash([]);
-                
+
                 // Restore context
                 ctx.restore();
             }
         }
     };
-    
+
     // Create new chart with custom plugin
     indexChart = new Chart(document.getElementById('indexChart'), {
         type: 'line',
@@ -721,7 +796,7 @@ async function buildIndexChart(tf) {
         },
         plugins: [customXAxisLabels] // Add the custom plugin
     });
-    
+
     // Reset opacity
     if (canvas) {
         canvas.style.opacity = '1';
@@ -732,11 +807,11 @@ async function buildIndexChart(tf) {
 async function switchTF(btn, tf) {
     document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    
+
     const originalText = btn.textContent;
     btn.textContent = 'Loading...';
     btn.disabled = true;
-    
+
     try {
         await buildIndexChart(tf);
     } catch (error) {
@@ -761,17 +836,17 @@ async function switchTF(btn, tf) {
 
 function displayIndexMetrics(data) {
     if (!data || data.length === 0) return;
-    
+
     const latest = data[0];
-    
+
     const change = parseFloat(latest.absolute_change);
     const changeSymbol = change >= 0 ? '+' : '';
-    
+
     const currentValueEl = document.getElementById('currentIndexValue');
     if (currentValueEl) {
         currentValueEl.textContent = parseFloat(latest.close).toFixed(2);
     }
-    
+
     const changeEl = document.getElementById('indexChange');
     if (changeEl) {
         changeEl.textContent = `${changeSymbol}${change.toFixed(2)} (${changeSymbol}${parseFloat(latest.percentage_change).toFixed(2)}%)`;
@@ -791,11 +866,11 @@ initChart();
 
 
 // Optional: Auto-refresh every 5 minutes (if your API updates frequently)
-// setInterval(() => {
-//     allNepseData = [];
-//     historicalData = [];
-//     initChart();
-// }, 5 * 60 * 1000);
+setInterval(() => {
+    allNepseData = [];
+    historicalData = [];
+    initChart();
+}, 60100);
 
 
 function getCookie(name) {
@@ -821,6 +896,7 @@ async function fetchNepse() {
     try {
         const response = await fetch('/api/fetch-nepse/', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')  // Django CSRF protection
@@ -840,11 +916,11 @@ async function fetchNepse() {
 }
 
 // Run every 10 minutes (600,000 ms)
-setInterval(fetchNepse, 10000);
+setInterval(fetchNepse, 60000);
 
-// Optional: run immediately on page load
+// // Optional: run immediately on page load
 fetchNepse();
 
 // setInterval(function () {
 //     location.reload();
-// }, 60000); // 60,000 ms = 1 minute
+// }, 10000); // 60,000 ms = 1 minute

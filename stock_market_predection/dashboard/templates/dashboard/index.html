@@ -55,24 +55,34 @@
         <div class="index-meta">
             <div class="meta-item">
                 <div class="meta-label">Turnover</div>
-                <div class="meta-val">NPR {{ trunover|floatformat:2 }}B</div>
+                <div class="meta-val" id="trunover">NPR {{ trunover|floatformat:2 }}B</div>
             </div>
             <div class="meta-item">
                 <div class="meta-label">Shares</div>
-                <div class="meta-val">{{ shares|floatformat:2 }}M</div>
+                <div class="meta-val" id="shares">
+                    <!-- {{ shares|floatformat:2 }}M -->
+
+                </div>
             </div>
             <div class="meta-item">
                 <div class="meta-label">Transactions</div>
-                <div class="meta-val">{{ transactions|floatformat:0 | intcomma}}</div>
+                <div class="meta-val" id="transactions">
+                    <!-- {{ transactions|floatformat:0 | intcomma}} -->
+
+                </div>
             </div>
             <div class="meta-item">
-                <div class="meta-label">Market Cap</div>
-                <div class="meta-val">{{ captalizaton|floatformat:2 }}T</div>
+                <div class="meta-label">Scripts</div>
+                <div class="meta-val" id="scripts">
+
+                </div>
             </div>
-            <div class="meta-item">
+            <!-- <div class="meta-item">
                 <div class="meta-label">Float Market Cap</div>
-                <div class="meta-val">{{ floatcaptalizaton|floatformat:2 }}T</div>
-            </div>
+                <div class="meta-val" id="float-market-cap">
+                    
+                </div>
+            </div> -->
         </div>
     </div>
 
