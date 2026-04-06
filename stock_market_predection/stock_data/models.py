@@ -61,6 +61,7 @@ class NepseIndex(models.Model):
     turnover_values = models.DecimalField(max_digits=20, decimal_places=2)
     turnover_volume = models.BigIntegerField()
     total_transaction = models.BigIntegerField()
+    scripts = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.date} - {self.close}"
@@ -94,3 +95,6 @@ class MostActiveStocks(models.Model):
     percentage_change = models.DecimalField(max_digits=20, decimal_places=2)
     previous_close = models.DecimalField(max_digits=20, decimal_places=2)
     total_traded_quantity = models.BigIntegerField()
+
+
+

@@ -128,6 +128,7 @@ async function updateData() {
         status.classList.remove('close-pill');
         status.classList.add('live-pill');
         marketTime.innerText = 'As of: ' + formatted;
+
         // 👉 start interval ONLY if not already running
         // if (!marketStatusInterval) {
         //     marketStatusInterval = setInterval(updateData, 200000); // 10 sec
@@ -152,161 +153,16 @@ async function updateData() {
 
 updateData();
 
-setInterval(updateData, 30000);
 
-// async function marketIndex() {
-//     const res = await fetch('/api/market-index/');
-//     const data = await res.json();
+// setInterval(() => {
+//     allNepseData = [];
+//     historicalData = [];
+//     initChart();
+// }, 60500);
 
-//     const nepseValue = document.querySelector('#nepse-val');
-//     const nepseChange = document.querySelector('#nepse-chg');
-
-//     nepseValue.innerText = data.nepseIndex;
-//     console.log("nepse index", data.nepseIndex);
-//     if (data.nepseValChange < 0) {
-//         nepseChange.innerText = '▼ ' + data.nepseValChange + '(' + data.nepsePerChange + ') %';
-//         nepseChange.classList.remove('up');
-//         nepseChange.classList.add('dn');
-//     } else {
-//         nepseChange.innerText = '▲ ' + data.nepseValChange + '(' + data.nepsePerChange + ') %';
-//         nepseChange.classList.remove('dn');
-//         nepseChange.classList.add('up');
-//     }
-//     // console.log("Index updated..");
-// }
-
-// async function marketStatus() {
-//     const res = await fetch('/api/market-status/');
-//     const data = await res.json();
-
-//     const status = document.querySelector('#market-status');
-//     const time = document.querySelector('#last-update-time');
-
-//     const date = new Date(data.asOf);
-
-//     const formatted = date.toLocaleString('en-US', {
-//         year: 'numeric',
-//         month: 'long',
-//         day: 'numeric',
-//         hour: '2-digit',
-//         minute: '2-digit',
-//         second: '2-digit',
-//         hour12: true
-//     });
-//     // console.log('market status: ', data.isOpen)
-
-//     if (data.isOpen === 'OPEN') {
-//         status.innerHTML = '<span class="live-dot"></span> OPEN</div>'
-//         status.classList.remove('close-pill');
-//         status.classList.add('live-pill');
-//         time.innerText = 'As of: ' + formatted;
-//         // 👉 start interval ONLY if not already running
-//         if (!marketStatusInterval) {
-//             marketStatusInterval = setInterval(marketStatus, 120000); // 10 sec
-//         }
-
-//     } else {
-//         status.innerHTML = '<span class="close-dot"></span> CLOSE</div>'
-//         status.classList.remove('live-pill');
-//         status.classList.add('close-pill');
-//         time.innerText = 'As of: ' + formatted;
-
-//         // 👉 stop auto refresh when market is closed
-//         if (marketStatusInterval) {
-//             clearInterval(marketStatusInterval);
-//             marketStatusInterval = null;
-//         }
-
-//     }
-
-// }
-
-
-
-// async function advancingDecliningStocks() {
-//     const res = await fetch('/api/stocks-status/');
-//     const data = await res.json();
-
-//     const advancing = document.querySelector('#advancing');
-//     const declining = document.querySelector('#declining');
-//     const unchanged = document.querySelector('#unchanged');
-//     const totalListed = document.querySelector('#total-listed');
-
-//     advancing.innerText = data.advancing;
-//     declining.innerText = data.declining;
-//     unchanged.innerText = data.unchanged;
-//     totalListed.innerText = data.total_listed;
-
-// }
-
-
-// async function gainers() {
-//     const res = await fetch('/api/gainers/');
-//     const data = await res.json();
-
-//     document.getElementById('gainers-body').innerHTML = data.gainers.map(d =>
-//         `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</td><td><span class="badge badge-up">${d.pointChange}</span></td><td><span class="badge badge-up">${d.percentageChange}</span></td></tr>`
-//     ).join('');
-
-//     // console.log(data.gainers)
-// }
-
-
-// async function loosers() {
-//     const res = await fetch('/api/loosers/');
-//     const data = await res.json();
-
-//     document.getElementById('losers-body').innerHTML = data.loosers.map(d =>
-//         `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</td><td><span class="badge badge-dn">${d.pointChange}</span></td><td><span class="badge badge-dn">${d.percentageChange}</span></td></tr>`
-//     ).join('');
-//     // console.log('loosers')
-// }
-
-
-
-// async function sectors() {
-//     const res = await fetch('/api/sectors/');
-//     const data = await res.json();
-
-//     const changes = data.sectors.map(s => Math.abs(s.perChange ?? s.perachange ?? 0));
-//     const maxPct = Math.max(...changes, 0.01); // prevent divide by zero
-
-//     document.getElementById('sector-list').innerHTML = data.sectors.map(s => {
-
-//         const change = s.perChange ?? s.perachange ?? 0;
-//         const pos = change >= 0;
-
-//         const w = Math.round(Math.abs(change) / maxPct * 100);
-
-//         return `
-//         <div class="sector-row">
-//             <span class="sector-name">${s.index}</span>
-//             <div class="bar-track">
-//                 <div class="bar-fill ${pos ? 'pos' : 'neg'}" style="width:${w}%"></div>
-//             </div>
-//             <span class="sector-pct ${pos ? 'up' : 'dn'}">
-//                 ${pos ? '+' : ''}${change.toFixed(2)}%
-//             </span>
-//         </div>`;
-//     }).join('');
-// }
-
-
-// async function activeStocks() {
-//     const res = await fetch('/api/active-stocks/');
-//     const data = await res.json();
-
-//     // console.log(data.active_stocks)
-
-//     document.getElementById('active-body').innerHTML = data.active_stocks.map(d =>
-//         `<tr>
-//       <td><div class="sym">${d.symbol}</div><div class="co-name">${d.securityName}</div></td>
-//       <td>${d.lastTradedPrice}</td>
-//       <td><span class="badge ${d.percentageChange > 0 ? 'badge-up' : 'badge-dn'}">${d.percentageChange}</span></td>
-//       <td>${d.totalTradeQuantity.toLocaleString()}</td>
-//     </tr>`
-//     ).join('');
-// }
+setInterval(() => {
+    updateData();
+}, 30000);
 
 
 //BELOW IS THE JS FOR THE CHART
@@ -845,6 +701,7 @@ async function switchTF(btn, tf) {
         btn.textContent = originalText;
         btn.disabled = false;
     }
+    
 }
 
 function displayIndexMetrics(data) {
@@ -883,6 +740,7 @@ setInterval(() => {
     allNepseData = [];
     historicalData = [];
     initChart();
+
 }, 60500);
 
 
@@ -928,12 +786,12 @@ async function fetchNepse() {
     }
 }
 
-// Run every 10 minutes (600,000 ms)
-setInterval(fetchNepse, 60000);
-
 // // Optional: run immediately on page load
 fetchNepse();
 
-// setInterval(function () {
-//     location.reload();
-// }, 10000); // 60,000 ms = 1 minute
+// Run every 10 minutes (600,000 ms)
+setInterval(() => {
+    fetchNepse();
+}, 60000);
+
+

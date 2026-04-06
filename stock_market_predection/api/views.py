@@ -172,6 +172,11 @@ def fetch_and_store_nepse(request):
 
         now = timezone.localtime()
         nepse_index_data = nepse.get_nepse_index()
+        market_summary = nepse.get_market_summary()
+        turnover = market_summary[0]['value']
+        shares = market_summary[1]['value']
+        transaction = market_summary[2]['value']
+        scripts = market_summary[3]['value']
         for item in nepse_index_data:
             if item['index'] == 'NEPSE Index':
                 nepse_index = item['currentValue']
@@ -188,9 +193,14 @@ def fetch_and_store_nepse(request):
         # Optional: check market hours
         if time(11, 0) <= now.time() <= time(15, 0):
             NepseIndexData.objects.create(timestamp=now, nepse_index=nepse_index, change= change, percentage_change=per_change, high=high, low=low, close=close, prevously_closed=previous_close, fift_two_week_high=fiftyTwoWeekHigh, fift_two_week_low=fiftyTwoWeekLow)
+            
             return Response({"message": f"NEPSE index {nepse_index} added at {now}"})
         else:
-            return Response({"message": "Market is closed."})
+            message = "No action taken"
+            if time(15, 0) <= now.time() <= time(15, 1):
+                NepseIndex.objects.create(date=now.date(), close=nepse_index, high= high, low=low, absolute_change=change, percentage_change=per_change, week_52_high= fiftyTwoWeekHigh, week_52_low= fiftyTwoWeekLow, turnover_values=turnover, turnover_volume=shares, total_transaction=transaction, scripts=scripts)
+                message = 'Done'
+            return Response({"message": f"Market is closed. and {message} at {now.date()}"})
     except Exception as e:
         return Response({"message": 'Error occured - '+str(e)})
     
