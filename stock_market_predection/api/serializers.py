@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from stock_data.models import NepseIndex, NepseIndexData
+from stock_data.models import NepseIndex, NepseIndexData, MostActiveStocks
 
 class NepseIndexSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,4 +10,10 @@ class NepseIndexSerializer(serializers.ModelSerializer):
 class NepseIndexDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = NepseIndexData
+        fields = '__all__'
+
+
+class MostActiveStocksSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MostActiveStocks
         fields = '__all__'

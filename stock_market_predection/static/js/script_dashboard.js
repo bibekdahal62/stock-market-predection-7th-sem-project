@@ -83,14 +83,27 @@ async function updateData() {
 
 
     //Active stocks
-    document.getElementById('active-body').innerHTML = data.active_stocks.map(d =>
-        `<tr>
-      <td><div class="sym">${d.symbol}</div><div class="co-name">${d.securityName}</div></td>
-      <td>${d.lastTradedPrice}</td>
-      <td><span class="badge ${d.percentageChange > 0 ? 'badge-up' : 'badge-dn'}">${d.percentageChange}</span></td>
-      <td>${d.totalTradeQuantity.toLocaleString()}</td>
-    </tr>`
-    ).join('');
+    document.getElementById('active-body').innerHTML =
+        data.active_stocks.map(d => {
+            const pct = parseFloat(d.percentage_change);
+            const qty = Number(d.total_traded_quantity);
+            const ltp = parseFloat(d.ltp);
+
+            return `
+                <tr>
+                <td>
+                    <div class="sym">${d.symbol}</div>
+                    <div class="co-name">${d.name}</div>
+                </td>
+                <td>${ltp.toFixed(2)}</td>
+                <td>
+                    <span class="badge ${pct > 0 ? 'badge-up' : 'badge-dn'}">
+                        ${pct.toFixed(2)}%
+                    </span>
+                </td>
+                <td>${qty.toLocaleString()}</td>
+                </tr>`;
+        }).join('');
     // console.log('Data Updated Successfilly....');
 
     //Market Status display
@@ -139,7 +152,7 @@ async function updateData() {
 
 updateData();
 
-setInterval(updateData, 20000);
+setInterval(updateData, 30000);
 
 // async function marketIndex() {
 //     const res = await fetch('/api/market-index/');
@@ -870,7 +883,7 @@ setInterval(() => {
     allNepseData = [];
     historicalData = [];
     initChart();
-}, 60100);
+}, 60500);
 
 
 function getCookie(name) {

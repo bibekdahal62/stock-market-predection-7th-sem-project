@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UPPER, NepseIndex, NepseIndexData
+from .models import UPPER, NepseIndex, NepseIndexData, MostActiveStocks
 
 # Register your models here.
 
@@ -12,10 +12,27 @@ class NepseIndexAdmin(admin.ModelAdmin):
     ordering = ('-date',)
 
 class NepseIndexDataAdmin(admin.ModelAdmin):
-    list_display = ('timestamp', 'nepse_index')
+    list_display = ('timestamp', 'nepse_index', 'change', 'percentage_change', 'close', 'high', 'low')
+
+
+class MostActiveStocksAdmin(admin.ModelAdmin):
+    list_display = (
+        'timestamp',
+        'security_id',
+        'name',
+        'symbol',
+        'ltp',
+        'percentage_change',
+        'previous_close',
+        'total_traded_quantity',
+    )
+
+    list_filter = ('timestamp','total_traded_quantity')
+    search_fields = ('name', 'symbol', 'security_id')
+    ordering = ('-timestamp',)
 
 
 admin.site.register(UPPER, UPPERAdmin)
 admin.site.register(NepseIndex, NepseIndexAdmin)
-
 admin.site.register(NepseIndexData, NepseIndexDataAdmin)
+admin.site.register(MostActiveStocks, MostActiveStocksAdmin)

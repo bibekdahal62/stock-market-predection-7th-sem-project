@@ -69,9 +69,28 @@ class NepseIndex(models.Model):
 class NepseIndexData(models.Model):
     timestamp = models.DateTimeField()  # manual date & time
     nepse_index = models.DecimalField(max_digits=10, decimal_places=2)
+    change = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    percentage_change = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    close = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    high = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    low = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    prevously_closed = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    fift_two_week_high = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    fift_two_week_low = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     class Meta:
         ordering = ['-timestamp']
 
     def __str__(self):
-        return f"{self.timestamp} - {self.nepse_index}"
+        return f"{self.timestamp} - {self.nepse_index} - {self.change} - {self.percentage_change}"
+    
+
+class MostActiveStocks(models.Model):
+    timestamp = models.DateTimeField()
+    security_id = models.IntegerField()
+    name = models.CharField(max_length=100)
+    symbol = models.CharField(max_length=12)
+    ltp = models.DecimalField(max_digits=20, decimal_places=2)
+    percentage_change = models.DecimalField(max_digits=20, decimal_places=2)
+    previous_close = models.DecimalField(max_digits=20, decimal_places=2)
+    total_traded_quantity = models.BigIntegerField()
