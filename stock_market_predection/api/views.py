@@ -133,6 +133,7 @@ def index_chart_latest(request):
         status = nepse.get_market_status()  # fetch current market status
 
         dt_string = status.get('asOf')
+        open_close = status.get('isOpen')
         if not dt_string:
             return Response({'market_status': None, 'data': None})
 
@@ -140,7 +141,10 @@ def index_chart_latest(request):
         dt_object = datetime.fromisoformat(dt_string)
 
         # Fetch today's NEPSE data
-        results = NepseIndexData.objects.filter(timestamp__date=dt_object.date())
+        if open_close == 'OPEN':
+            results = NepseIndexData.objects.filter(timestamp__date=dt_object.date())
+        else:
+            results = NepseIndexData.objects.order_by('-timestamp__date')
 
         if not results.exists():
             return Response({

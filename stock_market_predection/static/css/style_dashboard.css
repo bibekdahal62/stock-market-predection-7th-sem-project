@@ -33,13 +33,14 @@
     --red-light: #ffe5e5;
     --red: #e53935;
     --red-mid: #ff6b6b;
+    font-size: 100%;
 }
 
 body {
     font-family: var(--sans);
     background: var(--gray-50);
     color: var(--gray-800);
-    font-size: 14px;
+    font-size: 100%;
     min-height: 100vh;
 }
 

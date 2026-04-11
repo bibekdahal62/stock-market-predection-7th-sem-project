@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'stock_data',
     'dashboard',
     'api',
+    'prediction',
 ]
 
 MIDDLEWARE = [

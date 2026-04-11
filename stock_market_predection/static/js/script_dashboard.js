@@ -174,6 +174,7 @@ let indexChart;
 let allNepseData = []; // Store daily intraday data
 let historicalData = []; // Store historical daily closing data
 let currentMarketStatus = "CLOSE"; // Store market status (renamed to avoid conflict)
+let refreshInterval = null; // Store refresh interval reference
 
 async function fetchNepseData() {
     try {
@@ -203,6 +204,101 @@ async function fetchNepseData() {
     } catch (error) {
         console.error('Error fetching NEPSE data:', error);
         return { intraday: [], historical: [], marketStatus: "CLOSE" };
+    }
+}
+
+// Function to check if market is open (Monday to Friday, 11:00 to 15:00)
+function isMarketOpen() {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const currentTimeInMinutes = hours * 60 + minutes;
+    
+    const marketOpenTime = 11 * 60; // 11:00 AM
+    const marketCloseTime = 15 * 60; // 3:00 PM
+    
+    // Check if it's weekday (Monday to Friday) and within market hours
+    const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+    const isWithinMarketHours = currentTimeInMinutes >= marketOpenTime && currentTimeInMinutes <= marketCloseTime;
+    
+    return isWeekday && isWithinMarketHours;
+}
+
+// Function to check if today is weekend (Saturday or Sunday)
+function isWeekend() {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    return dayOfWeek === 0 || dayOfWeek === 6; // 0 = Sunday, 6 = Saturday
+}
+
+// Function to refresh the 1D chart only
+async function refreshOneDayChart() {
+    console.log('Refreshing 1D chart...', new Date().toLocaleTimeString());
+    
+    // Show loading state on chart
+    const canvas = document.getElementById('indexChart');
+    if (canvas) {
+        canvas.style.opacity = '0.5';
+    }
+    
+    try {
+        // Clear only intraday data (1D view data)
+        allNepseData = [];
+        
+        // Fetch fresh intraday data
+        const dailyResponse = await fetch('/api/latest-chart/');
+        
+        if (!dailyResponse.ok) throw new Error('API request failed');
+        
+        const dailyDataResponse = await dailyResponse.json();
+        
+        // Update market status and data
+        currentMarketStatus = dailyDataResponse.market_status;
+        allNepseData = dailyDataResponse.data;
+        
+        // Rebuild only the 1D chart
+        await buildIndexChart('1D');
+        
+        console.log('1D chart refreshed successfully');
+    } catch (error) {
+        console.error('Error refreshing 1D chart:', error);
+    } finally {
+        if (canvas) {
+            canvas.style.opacity = '1';
+        }
+    }
+}
+
+// Function to start/stop refresh based on market conditions
+function manageRefreshInterval() {
+    // Clear existing interval if any
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+    
+    // Check if market is open
+    if (isMarketOpen()) {
+        console.log('Market is OPEN - Starting 60.5 second refresh interval');
+        // Start refresh interval every 60.5 seconds (60500 milliseconds)
+        refreshInterval = setInterval(() => {
+            // Check again if market is still open before refreshing
+            if (isMarketOpen()) {
+                refreshOneDayChart();
+            } else {
+                // Market closed, stop refreshing
+                console.log('Market closed - Stopping refresh');
+                if (refreshInterval) {
+                    clearInterval(refreshInterval);
+                    refreshInterval = null;
+                }
+            }
+        }, 60500); // 60.5 seconds = 60500 milliseconds
+    } else if (isWeekend()) {
+        console.log('Weekend detected - No refresh (Market closed on weekends)');
+    } else {
+        console.log('Market is CLOSED (outside market hours) - No refresh');
     }
 }
 
@@ -243,7 +339,6 @@ function filterDataByTimeframe(data, tf) {
             const lastTimestamp = new Date(intradayData[intradayData.length - 1].timestamp);
             console.log(`1D View: ${intradayData.length} data points at ${interval}-minute intervals`);
             console.log(`Time range: ${firstTimestamp.toLocaleTimeString()} to ${lastTimestamp.toLocaleTimeString()}`);
-            // console.log(`Market Status: ${data.marketStatus}`);
         }
 
         return {
@@ -412,6 +507,12 @@ async function buildIndexChart(tf) {
             lastUpdateText = ` | Last: ${lastTimestamp.toLocaleTimeString()}`;
         }
 
+        // Add auto-refresh indicator when market is open
+        let autoRefreshText = '';
+        if (marketStatusForView === "OPEN" && isMarketOpen()) {
+            autoRefreshText = ' | 🔄 Auto-refresh: 60.5s';
+        }
+
         // Set title based on data completeness and market status
         const percentageComplete = (dataPointCount / expectedMaxPoints * 100).toFixed(0);
 
@@ -425,7 +526,7 @@ async function buildIndexChart(tf) {
             xAxisConfig.ticks.autoSkip = false;
             xAxisConfig.title = {
                 display: true,
-                text: `${marketStatusIcon} ${marketStatusText}${lastUpdateText}`,
+                text: `${marketStatusIcon} ${marketStatusText}${autoRefreshText}${lastUpdateText}`,
                 color: '#2ecc71',
                 font: { size: 10, family: 'IBM Plex Mono', weight: 'bold' },
                 padding: { top: 10 }
@@ -683,6 +784,11 @@ async function switchTF(btn, tf) {
 
     try {
         await buildIndexChart(tf);
+        
+        // If switching to 1D view, manage refresh interval
+        if (tf === '1D') {
+            manageRefreshInterval();
+        }
     } catch (error) {
         console.error('Error switching timeframe:', error);
         if (indexChart) {
@@ -701,7 +807,6 @@ async function switchTF(btn, tf) {
         btn.textContent = originalText;
         btn.disabled = false;
     }
-    
 }
 
 function displayIndexMetrics(data) {
@@ -729,6 +834,9 @@ async function initChart() {
     if (historicalData.length > 0) {
         displayIndexMetrics(historicalData);
     }
+    
+    // Start managing refresh interval based on market conditions
+    manageRefreshInterval();
 }
 
 // Start the chart
@@ -736,12 +844,12 @@ initChart();
 
 
 // Optional: Auto-refresh every 5 minutes (if your API updates frequently)
-setInterval(() => {
-    allNepseData = [];
-    historicalData = [];
-    initChart();
+// setInterval(() => {
+//     allNepseData = [];
+//     historicalData = [];
+//     initChart();
 
-}, 60500);
+// }, 60500);
 
 
 function getCookie(name) {
@@ -793,5 +901,10 @@ fetchNepse();
 setInterval(() => {
     fetchNepse();
 }, 60000);
+
+
+
+
+
 
 
