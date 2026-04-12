@@ -3,14 +3,14 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from pathlib import Path
 import pandas as pd
-from . import predictor_lstm, predictor_rf
+from . import predictor_lstm, predictor_rf, predictor_lstm_2m
 import os
 from .models import Upper
 
 
 # Create your views here.
 BASE= Path(__file__).resolve().parent.parent
-print(BASE)
+
 
 def index(request):
 
@@ -25,9 +25,10 @@ stock_names = {
             'model_dir': os.path.join(BASE, 'prediction','saved_models', 'upper')
         }, 
         'lstm': {
-            'model_path': os.path.join(BASE, "prediction", "saved_models", "lstm", "upper","upper_lstm.keras"),
-            'scaler_feature_path': os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "scaler_features.pkl"),
-            'scaler_target_path': os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "scaler_targets.pkl")
+            "model1": os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "two_models","upper_lstm_model1_30d.keras"),
+            "model2": os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "two_models","upper_lstm_model2_15d.keras"),
+            "scaler_feature_path": os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "two_models","scaler_features.pkl"),
+            "scaler_target_path": os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "two_models","scaler_targets.pkl")
         }
     },
     'hbl':{
@@ -53,10 +54,11 @@ def predection_data(request, stock):
         model_dir = stock_name['rf']['model_dir']
         random_forest_predection = predictor_rf.predict_upper(model_dir=model_dir, n_days=5, data=qs)
 
-        model_path = stock_name['lstm']['model_path']
+        model_1 = stock_name['lstm']['model1']
+        model_2 = stock_name['lstm']['model2']
         scaler_feature_path = stock_name['lstm']['scaler_feature_path']
         scaler_target_path = stock_name['lstm']['scaler_target_path']
-        lstm_predection = predictor_lstm.predict_next_day(model_path=model_path, scaler_feature_path=scaler_feature_path, scaler_target_path=scaler_target_path, data=qs)
+        lstm_predection = predictor_lstm_2m.predict_next_day(model1_path=model_1, model2_path=model_2, scaler_features_path=scaler_feature_path, scaler_targets_path=scaler_target_path, data=qs)
 
         return Response({
             'message': 'success',

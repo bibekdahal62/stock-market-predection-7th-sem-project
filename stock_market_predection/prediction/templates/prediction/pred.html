@@ -3,8 +3,219 @@
 {% load static %}
 
 
+{% block extracss %}
+
+<link rel="stylesheet" href="{% static 'css/style_prediction.css' %}">
+
+{% endblock %}
+
+
 {% block content %}
 
-<h1>Hello Predection.........</h1>
+
+<div class="container">
+
+    <!-- PAGE TITLE BAR -->
+    <div class="page-bar">
+        <div>
+            <div class="page-bar-title">Stock Price Prediction</div>
+            <div class="page-bar-sub">Machine learning based short-term trend forecasting for NEPSE</div>
+        </div>
+        <div class="disclaimer">⚠ For academic &amp; educational use only — not financial advice</div>
+    </div>
+
+    <div class="pred-grid">
+
+        <!-- ── LEFT: SETTINGS PANEL ── -->
+        <div>
+            <div class="card">
+                <div class="card-head"><span class="card-title">Prediction Settings</span></div>
+                <div class="card-body">
+
+                    <div class="form-group">
+                        <label class="form-label">Select Stock</label>
+                        <select id="stock-sel" onchange="refreshPrediction()">
+                            <option value="NABIL">NABIL — Nabil Bank</option>
+                            <option value="NICA">NICA — NIC Asia Bank</option>
+                            <option value="PRVU">PRVU — Prabhu Bank</option>
+                            <option value="NLFCL">NLFCL — Nepal Finance</option>
+                            <option value="SHPC">SHPC — Sanima Hydro</option>
+                            <option value="UPPER">UPPER — Upper Tamakoshi</option>
+                            <option value="NTC">NTC — Nepal Telecom</option>
+                            <option value="HIDCL">HIDCL — HIDCL</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Forecast Horizon</label>
+                        <select id="horizon-sel" onchange="onHorizonChange()">
+                            <option value="1" selected>1 Day</option>
+                            <option value="3">3 Days</option>
+                            <option value="5">5 Days</option>
+                            <option value="7">7 Days</option>
+                        </select>
+                        <div class="horizon-note" id="horizon-note">LSTM predicts 1 day · Random Forest up to 7 days
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">ML Model</label>
+                        <div class="model-list">
+                            <label class="model-option active" onclick="pickModel(this, 'lstm')">
+                                <input type="radio" name="model" value="lstm" checked>
+                                <div class="model-info">
+                                    <div class="model-name">LSTM Network</div>
+                                    <div class="model-desc">Deep learning · 1-day forecast</div>
+                                </div>
+                                <div class="model-acc">~87%</div>
+                            </label>
+                            <label class="model-option" onclick="pickModel(this, 'rf')">
+                                <input type="radio" name="model" value="rf">
+                                <div class="model-info">
+                                    <div class="model-name">Random Forest</div>
+                                    <div class="model-desc">Ensemble · up to 7-day forecast</div>
+                                </div>
+                                <div class="model-acc">~83%</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button class="run-btn" onclick="refreshPrediction()">▶ Run Prediction</button>
+                </div>
+            </div>
+
+            <!-- HOW IT WORKS CARD -->
+            <div class="card">
+                <div class="card-head"><span class="card-title">How It Works</span></div>
+                <div class="card-body">
+                    <div class="how-step">
+                        <div class="how-num">1</div>
+                        <div>
+                            <div class="how-title">Data Collection</div>
+                            <div class="how-desc">Historical NEPSE price data (open, high, low, close, volume) is
+                                fetched and stored for the selected stock.</div>
+                        </div>
+                    </div>
+                    <div class="how-step">
+                        <div class="how-num">2</div>
+                        <div>
+                            <div class="how-title">Preprocessing</div>
+                            <div class="how-desc">Data is cleaned, normalized and feature-engineered before being passed
+                                to the model.</div>
+                        </div>
+                    </div>
+                    <div class="how-step">
+                        <div class="how-num">3</div>
+                        <div>
+                            <div class="how-title">Model Inference</div>
+                            <div class="how-desc"><strong>LSTM</strong> uses sequential time-series patterns to predict
+                                the next day's closing price. <strong>Random Forest</strong> uses engineered features to
+                                forecast up to 7 days ahead.</div>
+                        </div>
+                    </div>
+                    <div class="how-step" style="border-bottom:none">
+                        <div class="how-num">4</div>
+                        <div>
+                            <div class="how-title">Output</div>
+                            <div class="how-desc">Predicted prices, percentage change, confidence band and BUY / SELL /
+                                HOLD signal are displayed below.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── RIGHT: CHARTS & RESULTS ── -->
+        <div>
+
+            <!-- METRIC CARDS -->
+            <div class="pred-metrics">
+                <div class="stat-card">
+                    <div class="stat-label">Current Price</div>
+                    <div class="stat-val" id="pm-cur">NPR 1,243</div>
+                    <div class="stat-change" style="color:var(--gray-400)" id="pm-stock">NABIL · Today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Today's High</div>
+                    <div class="stat-val up" id="pm-high">NPR 1,261</div>
+                    <div class="stat-change up" id="pm-high-chg">▲ +1.45%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Today's Low</div>
+                    <div class="stat-val dn" id="pm-low">NPR 1,228</div>
+                    <div class="stat-change dn" id="pm-low-chg">▼ −1.21%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Predicted Price</div>
+                    <div class="stat-val up" id="pm-pred">NPR 1,318</div>
+                    <div class="stat-change up" id="pm-chg">▲ +6.0% in 1 day</div>
+                </div>
+            </div>
+
+            <!-- PREDICTION CHART -->
+            <div class="card">
+                <div class="card-head">
+                    <span class="card-title" id="pred-title">NABIL — Price Prediction (1 Day)</span>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-line" style="background:var(--green-mid)"></div>Actual
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dashed"></div>Predicted
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-band"></div>Confidence
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body" style="padding-bottom:12px">
+                    <div style="position:relative;width:100%;height:260px">
+                        <canvas id="predChart"></canvas>
+                    </div>
+                    <div class="signal-bar buy" id="signal-box">
+                        <span class="signal-icon">📈</span>
+                        <div>
+                            <div class="signal-label">BUY Signal</div>
+                            <div class="signal-detail">LSTM model projects upward trend. Confidence: High (87%). For
+                                educational reference only.</div>
+                        </div>
+                    </div>
+
+                    <!-- PREDICTED PRICES TABLE -->
+                    <div class="pred-table-wrap">
+                        <div class="pred-table-title">Predicted Prices</div>
+                        <table class="pred-price-table">
+                            <thead>
+                                <tr>
+                                    <th>Day</th>
+                                    <th>Date</th>
+                                    <th>Predicted Price</th>
+                                    <th>Change</th>
+                                    <th>Lower CI</th>
+                                    <th>Upper CI</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pred-price-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VOLUME CHART -->
+            <div class="card">
+                <div class="card-head">
+                    <span class="card-title">Volume Analysis</span>
+                    <span class="datetime">Last 15 trading days · Blue = recent</span>
+                </div>
+                <div class="card-body" style="padding-bottom:12px">
+                    <div style="position:relative;width:100%;height:130px">
+                        <canvas id="volChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
 
 {% endblock %}
