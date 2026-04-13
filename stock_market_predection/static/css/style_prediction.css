@@ -29,6 +29,9 @@
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
     --radius: 6px;
     --radius-lg: 10px;
+    --red-light: #ffe5e5;
+    --red: #e53935;
+    --red-mid: #ff6b6b;
 }
 
 body {
@@ -181,6 +184,51 @@ nav {
 .nav-btn.active {
     color: var(--green);
     background: var(--green-light);
+}
+
+
+.live-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-light);
+    color: var(--green);
+    font-size: 11px;
+    font-family: var(--mono);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green-mid);
+    animation: blink 1.8s ease-in-out infinite;
+}
+
+.close-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--red-light);
+    color: var(--red);
+    font-size: 11px;
+    font-family: var(--mono);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.close-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--red-mid);
+    animation: blink 1.8s ease-in-out infinite;
 }
 
 /* LAYOUT */

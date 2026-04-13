@@ -34,15 +34,15 @@
 
                     <div class="form-group">
                         <label class="form-label">Select Stock</label>
-                        <select id="stock-sel" onchange="refreshPrediction()">
-                            <option value="NABIL">NABIL — Nabil Bank</option>
-                            <option value="NICA">NICA — NIC Asia Bank</option>
-                            <option value="PRVU">PRVU — Prabhu Bank</option>
+                        <select id="stock-sel" onchange="onStockChange()">
+                            <option value="upper">UPPER</option>
+                            <option value="hbl">HBL</option>
+                            <!-- <option value="PRVU">PRVU — Prabhu Bank</option>
                             <option value="NLFCL">NLFCL — Nepal Finance</option>
                             <option value="SHPC">SHPC — Sanima Hydro</option>
                             <option value="UPPER">UPPER — Upper Tamakoshi</option>
                             <option value="NTC">NTC — Nepal Telecom</option>
-                            <option value="HIDCL">HIDCL — HIDCL</option>
+                            <option value="HIDCL">HIDCL — HIDCL</option> -->
                         </select>
                     </div>
 
@@ -67,7 +67,7 @@
                                     <div class="model-name">LSTM Network</div>
                                     <div class="model-desc">Deep learning · 1-day forecast</div>
                                 </div>
-                                <div class="model-acc">~87%</div>
+                                <div class="model-acc"></div>
                             </label>
                             <label class="model-option" onclick="pickModel(this, 'rf')">
                                 <input type="radio" name="model" value="rf">
@@ -75,7 +75,7 @@
                                     <div class="model-name">Random Forest</div>
                                     <div class="model-desc">Ensemble · up to 7-day forecast</div>
                                 </div>
-                                <div class="model-acc">~83%</div>
+                                <div class="model-acc"></div>
                             </label>
                         </div>
                     </div>
@@ -132,23 +132,23 @@
             <div class="pred-metrics">
                 <div class="stat-card">
                     <div class="stat-label">Current Price</div>
-                    <div class="stat-val" id="pm-cur">NPR 1,243</div>
+                    <div class="stat-val" id="pm-cur"></div>
                     <div class="stat-change" style="color:var(--gray-400)" id="pm-stock">NABIL · Today</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Today's High</div>
-                    <div class="stat-val up" id="pm-high">NPR 1,261</div>
-                    <div class="stat-change up" id="pm-high-chg">▲ +1.45%</div>
+                    <div class="stat-val up" id="pm-high"></div>
+                    <div class="stat-change up" id="pm-high-chg"></div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Today's Low</div>
-                    <div class="stat-val dn" id="pm-low">NPR 1,228</div>
-                    <div class="stat-change dn" id="pm-low-chg">▼ −1.21%</div>
+                    <div class="stat-val dn" id="pm-low"></div>
+                    <div class="stat-change dn" id="pm-low-chg"></div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Predicted Price</div>
-                    <div class="stat-val up" id="pm-pred">NPR 1,318</div>
-                    <div class="stat-change up" id="pm-chg">▲ +6.0% in 1 day</div>
+                    <div class="stat-val up" id="pm-pred"></div>
+                    <div class="stat-change up" id="pm-chg"></div>
                 </div>
             </div>
 
@@ -189,10 +189,10 @@
                                 <tr>
                                     <th>Day</th>
                                     <th>Date</th>
-                                    <th>Predicted Price</th>
-                                    <th>Change</th>
-                                    <th>Lower CI</th>
-                                    <th>Upper CI</th>
+                                    <th>Predicted Close Price</th>
+                                    <th>Predicted Change %</th>
+                                    <th>Predicted High Price</th>
+                                    <th>Predicted Low Price</th>
                                 </tr>
                             </thead>
                             <tbody id="pred-price-tbody"></tbody>
@@ -217,5 +217,14 @@
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+
+ {% block extra_script %}
+
+<script src="{% static 'js/script_prediction.js' %}">
+
+</script>
 
 {% endblock %}
