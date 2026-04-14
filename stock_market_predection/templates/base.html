@@ -12,10 +12,14 @@
     <link
         href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
         rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
     <link rel="stylesheet" href="{% static 'css/profile.css' %}">
 
+
+
     {% block extracss %} {% endblock %}
-    
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 
@@ -38,6 +42,8 @@
     {% block extra_script %}
 
     {% endblock %}
+
+    <script src="{% static 'js/header_script.js' %}"></script>
 </body>
 
 </html>

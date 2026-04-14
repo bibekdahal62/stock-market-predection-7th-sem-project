@@ -10,10 +10,10 @@
             </div>
         </a>
         <nav>
-            <a href="dashboard.html" class="nav-btn active">Market Dashboard</a>
+            <a href="{% url 'home' %}" class="nav-btn">Market Dashboard</a>
             <a href="{% url 'prediction' %}" class="nav-btn">Stock Prediction</a>
         </nav>
-        <div class="live-pill" id="market-status"><span class="live-dot"></span> OPEN</div>
+        <div class="live-pill" id="market-status"><span></span></div>
 
 
 

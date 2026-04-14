@@ -1,14 +1,60 @@
 let marketStatusInterval = null;
 
 
+function marketStatus(data){
+
+    const status = document.querySelector('#market-status');
+
+    if (data.isOpen === 'OPEN') {
+        status.innerHTML = '<span class="live-dot"></span> OPEN</div>'
+        status.classList.remove('close-pill');
+        status.classList.add('live-pill');
+        
+
+        // 👉 start interval ONLY if not already running
+        // if (!marketStatusInterval) {
+        //     marketStatusInterval = setInterval(updateData, 200000); // 10 sec
+        // }
+
+    } else {
+        status.innerHTML = '<span class="close-dot"></span> CLOSE</div>'
+        status.classList.remove('live-pill');
+        status.classList.add('close-pill');
+        // marketTime.innerText = 'As of: ' + formatted;
+
+        // 👉 stop auto refresh when market is closed
+        // if (marketStatusInterval) {
+        //     clearInterval(marketStatusInterval);
+        //     marketStatusInterval = null;
+        // }
+
+    }
+}
+
 async function updateData() {
     const res = await fetch('/api/stock-data/');
     const data = await res.json()
 
 
+    const date = new Date(data.asOf);
+
+    const formatted = date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    });
+
+
     // Market index display
     const nepseValue = document.querySelector('#nepse-val');
     const nepseChange = document.querySelector('#nepse-chg');
+
+    const marketTime = document.querySelector('#last-update-time');
+    marketTime.innerText = 'As of: ' + formatted;
 
     nepseValue.innerText = data.nepseIndex;
     console.log("nepse index", data.nepseIndex);
@@ -107,46 +153,12 @@ async function updateData() {
     // console.log('Data Updated Successfilly....');
 
     //Market Status display
-    const status = document.querySelector('#market-status');
-    const marketTime = document.querySelector('#last-update-time');
+    
 
-    const date = new Date(data.asOf);
-
-    const formatted = date.toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true
-    });
+    
     // console.log('market status: ', data.isOpen)
 
-    if (data.isOpen === 'OPEN') {
-        status.innerHTML = '<span class="live-dot"></span> OPEN</div>'
-        status.classList.remove('close-pill');
-        status.classList.add('live-pill');
-        marketTime.innerText = 'As of: ' + formatted;
-
-        // 👉 start interval ONLY if not already running
-        // if (!marketStatusInterval) {
-        //     marketStatusInterval = setInterval(updateData, 200000); // 10 sec
-        // }
-
-    } else {
-        status.innerHTML = '<span class="close-dot"></span> CLOSE</div>'
-        status.classList.remove('live-pill');
-        status.classList.add('close-pill');
-        marketTime.innerText = 'As of: ' + formatted;
-
-        // 👉 stop auto refresh when market is closed
-        // if (marketStatusInterval) {
-        //     clearInterval(marketStatusInterval);
-        //     marketStatusInterval = null;
-        // }
-
-    }
+    marketStatus(data);
 
 
 }

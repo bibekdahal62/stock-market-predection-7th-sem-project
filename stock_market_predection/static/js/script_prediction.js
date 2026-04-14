@@ -1,4 +1,40 @@
 // MODEL DATA
+
+async function getMarketStatus() {
+  const res = await fetch('/api/stock-data/');
+  const data = await res.json();
+
+  const status = document.querySelector('#market-status');
+
+  if (data.isOpen === 'OPEN') {
+    status.innerHTML = '<span class="live-dot"></span> OPEN</div>'
+    status.classList.remove('close-pill');
+    status.classList.add('live-pill');
+
+
+    // 👉 start interval ONLY if not already running
+    // if (!marketStatusInterval) {
+    //     marketStatusInterval = setInterval(updateData, 200000); // 10 sec
+    // }
+
+  } else {
+    status.innerHTML = '<span class="close-dot"></span> CLOSE</div>'
+    status.classList.remove('live-pill');
+    status.classList.add('close-pill');
+    // marketTime.innerText = 'As of: ' + formatted;
+
+    // 👉 stop auto refresh when market is closed
+    // if (marketStatusInterval) {
+    //     clearInterval(marketStatusInterval);
+    //     marketStatusInterval = null;
+    // }
+
+  }
+}
+getMarketStatus();
+setInterval(getMarketStatus, 60000);
+
+
 const modelAcc = { lstm: 87.4, rf: 83.1 };
 let activeModel = 'lstm';
 let apiData = null; // Store API data for current stock
@@ -72,18 +108,29 @@ function refreshPrediction() {
 
   const days = parseInt(document.getElementById('horizon-sel').value);
   const symbol = document.getElementById('stock-sel').value.toUpperCase();
-  
+
   // Get current price from latest data
   const currentPrice = apiData.data[0].close;
-  const stockName = symbol === 'HBL' ? 'Himalayan Bank' : 
-                    symbol === 'UPPER' ? 'Upper Tamakoshi' : symbol;
+  const stockNames = {
+    'HBL': 'Himalayan Bank Limited',
+    'UPPER': 'Upper Tamakoshi Hydropower Limited',
+    // 'NABIL': 'Nabil Bank Limited',
+    // 'NICA': 'NIC Asia Bank Limited',
+    // 'PRVU': 'Prabhu Bank Limited',
+    // 'NLFCL': 'Nepal Finance Limited',
+    // 'SHPC': 'Sanima Hydro Limited',
+    // 'NTC': 'Nepal Telecom',
+    // 'HIDCL': 'Hydroelectricity Investment and Development Company Limited'
+  };
+
+  const stockName = stockNames[symbol] || symbol;
 
   // Get historical data (last 30 days for chart) - order from oldest to newest (left to right)
   const historicalData = apiData.data.slice(0, 30).reverse();
   const histPrices = historicalData.map(d => d.close);
   const histLabels = historicalData.map((d, i) => {
     const date = new Date(d.published_date);
-    return `${date.getMonth()+1}/${date.getDate()}`;
+    return `${date.getMonth() + 1}/${date.getDate()}`;
   });
 
   let predData = [];
@@ -130,7 +177,7 @@ function refreshPrediction() {
 
   // Build chart labels - historical dates and prediction labels
   const histChartLabels = [...histLabels];
-  
+
   // Create prediction labels
   const predLabels = [];
   for (let i = 0; i < predData.length; i++) {
@@ -140,13 +187,13 @@ function refreshPrediction() {
       predLabels.push(`Day ${i + 1}`);
     }
   }
-  
+
   // Combine labels
   const labels = [...histChartLabels, ...predLabels];
 
   // Build data arrays for chart
   const histFull = [...histPrices];
-  
+
   // For prediction data, add null for all historical points, then prediction points
   const predFull = [...Array(histPrices.length).fill(null), ...predData];
   const upFull = [...Array(histPrices.length).fill(null), ...upBand];
@@ -191,85 +238,85 @@ function refreshPrediction() {
   predChart = new Chart(document.getElementById('predChart'), {
     type: 'line',
     data: {
-      labels, 
+      labels,
       datasets: [
-        { 
-          label: 'Actual', 
-          data: histFull, 
-          borderColor: '#12a066', 
-          borderWidth: 2, 
-          pointRadius: 0, 
+        {
+          label: 'Actual',
+          data: histFull,
+          borderColor: '#12a066',
+          borderWidth: 2,
+          pointRadius: 0,
           pointHoverRadius: 5,
-          tension: 0.3, 
-          fill: false 
+          tension: 0.3,
+          fill: false
         },
-        { 
-          label: 'Predicted', 
-          data: predFull, 
-          borderColor: '#1a4f8a', 
-          borderWidth: 2.5, 
-          borderDash: [6, 4], 
+        {
+          label: 'Predicted',
+          data: predFull,
+          borderColor: '#1a4f8a',
+          borderWidth: 2.5,
+          borderDash: [6, 4],
           pointRadius: 5,
           pointBorderColor: '#1a4f8a',
           pointBackgroundColor: '#ffffff',
           pointBorderWidth: 2,
           pointHoverRadius: 7,
-          tension: 0.3, 
-          fill: false 
+          tension: 0.3,
+          fill: false
         },
-        { 
-          label: 'Upper CI', 
-          data: upFull, 
-          borderColor: 'transparent', 
-          fill: '+1', 
-          backgroundColor: 'rgba(26,79,138,0.1)', 
-          pointRadius: 0, 
-          tension: 0.3 
+        {
+          label: 'Upper CI',
+          data: upFull,
+          borderColor: 'transparent',
+          fill: '+1',
+          backgroundColor: 'rgba(26,79,138,0.1)',
+          pointRadius: 0,
+          tension: 0.3
         },
-        { 
-          label: 'Lower CI', 
-          data: loFull, 
-          borderColor: 'transparent', 
-          fill: false, 
-          pointRadius: 0, 
-          tension: 0.3 
+        {
+          label: 'Lower CI',
+          data: loFull,
+          borderColor: 'transparent',
+          fill: false,
+          pointRadius: 0,
+          tension: 0.3
         },
       ]
     },
     options: {
-      responsive: true, 
+      responsive: true,
       maintainAspectRatio: false,
-      plugins: { 
-        legend: { display: false }, 
-        tooltip: { 
-          mode: 'index', 
-          intersect: false, 
-          filter: i => i.datasetIndex <= 1, 
-          callbacks: { 
-            label: c => `${c.dataset.label}: NPR ${c.parsed.y?.toFixed(2)}` 
-          } 
-        } 
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          filter: i => i.datasetIndex <= 1,
+          callbacks: {
+            label: c => `${c.dataset.label}: NPR ${c.parsed.y?.toFixed(2)}`
+          }
+        }
       },
       scales: {
-        x: { 
-          grid: { display: false }, 
-          ticks: { 
-            color: '#9aa2ae', 
-            font: { size: 10, family: 'IBM Plex Mono' }, 
+        x: {
+          grid: { display: false },
+          ticks: {
+            color: '#9aa2ae',
+            font: { size: 10, family: 'IBM Plex Mono' },
             maxTicksLimit: 12,
             maxRotation: 45,
             minRotation: 45
-          } 
+          }
         },
-        y: { 
-          position: 'right', 
-          grid: { color: 'rgba(154,162,174,0.15)' }, 
-          ticks: { color: '#9aa2ae', font: { size: 10, family: 'IBM Plex Mono' } } 
+        y: {
+          position: 'right',
+          grid: { color: 'rgba(154,162,174,0.15)' },
+          ticks: { color: '#9aa2ae', font: { size: 10, family: 'IBM Plex Mono' } }
         }
       },
       elements: {
         point: {
-          radius: function(context) {
+          radius: function (context) {
             // Show points only for prediction data
             const datasetIndex = context.datasetIndex;
             const dataIndex = context.dataIndex;
@@ -324,16 +371,16 @@ function buildPredTable(currentPrice, predData, upBand, loBand) {
 // VOLUME CHART using actual volume data
 function buildVolChart() {
   if (volChart) volChart.destroy();
-  
+
   // Use actual volume data from API (last 15 days) - order from oldest to newest
   const volumeData = apiData.data.slice(0, 15).reverse();
   const labels = volumeData.map(d => {
     const date = new Date(d.published_date);
-    return `${date.getMonth()+1}/${date.getDate()}`;
+    return `${date.getMonth() + 1}/${date.getDate()}`;
   });
-  const data = volumeData.map(d => (d.traded_quantity / 1000000).toFixed(1));
+  const data = volumeData.map(d => (d.traded_quantity / 1000000).toFixed(3));
   const colors = data.map((_, i) => i >= 13 ? 'rgba(26,79,138,0.75)' : 'rgba(10,124,78,0.5)');
-  
+
   volChart = new Chart(document.getElementById('volChart'), {
     type: 'bar',
     data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, borderRadius: 3 }] },
@@ -341,19 +388,19 @@ function buildVolChart() {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.parsed.y}M shares` } } },
       scales: {
-        x: { 
-          grid: { display: false }, 
-          ticks: { 
-            color: '#9aa2ae', 
-            font: { size: 9, family: 'IBM Plex Mono' }, 
+        x: {
+          grid: { display: false },
+          ticks: {
+            color: '#9aa2ae',
+            font: { size: 9, family: 'IBM Plex Mono' },
             maxTicksLimit: 8,
             maxRotation: 45,
             minRotation: 45
-          } 
+          }
         },
-        y: { 
-          grid: { color: 'rgba(154,162,174,0.15)' }, 
-          ticks: { color: '#9aa2ae', font: { size: 9, family: 'IBM Plex Mono' }, callback: v => `${v}M` } 
+        y: {
+          grid: { color: 'rgba(154,162,174,0.15)' },
+          ticks: { color: '#9aa2ae', font: { size: 9, family: 'IBM Plex Mono' }, callback: v => `${v}M` }
         }
       }
     }
@@ -377,10 +424,10 @@ function removeAccuracyDisplay() {
   const horizSel = document.getElementById('horizon-sel');
   Array.from(horizSel.options).forEach(o => { o.disabled = parseInt(o.value) > 1; });
   updateHorizonNote();
-  
+
   // Remove accuracy displays
-  removeAccuracyDisplay();
-  
+  // removeAccuracyDisplay();
+
   // Get initial stock value and fetch its data
   const initialStock = document.getElementById('stock-sel').value;
   fetchStockData(initialStock);
