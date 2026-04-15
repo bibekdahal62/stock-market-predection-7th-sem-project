@@ -67,7 +67,7 @@ def predection_data(request, stock):
         qs = stock_models[stock].objects.all().values()   # gets dict with field names
         data = stock_models[stock].objects.order_by('-published_date')[:30]
         sd = model_serializers[stock]
-        serializeer = sd(data, many=True)
+        serializer = sd(data, many=True)
 
         stock_name = stock_names[stock]
         model_dir = stock_name['rf']['model_dir']
@@ -84,7 +84,7 @@ def predection_data(request, stock):
             'error': False,
             'rf_pred': random_forest_predection,
             'lstm_pred': lstm_predection,
-            'data': serializeer.data
+            'data': serializer.data
         })
     
     else:

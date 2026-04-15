@@ -73,7 +73,7 @@ async function updateData() {
 
     //Market trunover, shares etc
 
-    document.querySelector('#trunover').innerText = `NPR ${data.trunover} B`;
+    document.querySelector('#trunover').innerText = `NPR ${data.turnover} B`;
     document.querySelector('#shares').innerText = `${data.shares} M`;
     document.querySelector('#transactions').innerText = `${data.transactions.toLocaleString('en-US')}`;
     document.querySelector('#scripts').innerText = `${data.scripts}`;
@@ -84,40 +84,44 @@ async function updateData() {
     const advancing = document.querySelector('#advancing');
     const declining = document.querySelector('#declining');
     const unchanged = document.querySelector('#unchanged');
+    const positiveCircuit = document.querySelector('#plus-circuit');
+    const negativeCircuit = document.querySelector('#minus-circuit');
     const totalListed = document.querySelector('#total-listed');
 
-    advancing.innerText = data.advancing;
-    declining.innerText = data.declining;
-    unchanged.innerText = data.unchanged;
-    totalListed.innerText = data.total_listed;
+    advancing.innerText = data.market_breadth.advancing;
+    declining.innerText = data.market_breadth.declining;
+    unchanged.innerText = data.market_breadth.unchanged;
+    positiveCircuit.innerText = data.market_breadth.positive_circuit;
+    negativeCircuit.innerText = data.market_breadth.negative_circuit;
+    totalListed.innerText = data.market_breadth.total_listed;
 
 
     //Top Gainers
     document.getElementById('gainers-body').innerHTML = data.gainers.map(d =>
-        `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</td><td><span class="badge badge-up">${d.pointChange}</span></td><td><span class="badge badge-up">${d.percentageChange}</span></td></tr>`
+        `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</td><td><span class="badge badge-up">${d.point_change}</span></td><td><span class="badge badge-up">${d.percentage_change}</span></td></tr>`
     ).join('');
 
 
     //Top Loosers
     document.getElementById('losers-body').innerHTML = data.loosers.map(d =>
-        `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</td><td><span class="badge badge-dn">${d.pointChange}</span></td><td><span class="badge badge-dn">${d.percentageChange}</span></td></tr>`
+        `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</td><td><span class="badge badge-dn">${d.point_change}</span></td><td><span class="badge badge-dn">${d.percentage_change}</span></td></tr>`
     ).join('');
 
 
     //Sectors
-    const changes = data.sectors.map(s => Math.abs(s.perChange ?? s.perachange ?? 0));
+    const changes = data.sectors.map(s => Math.abs(s.percentage_change ?? s.percentage_change ?? 0));
     const maxPct = Math.max(...changes, 0.01); // prevent divide by zero
 
     document.getElementById('sector-list').innerHTML = data.sectors.map(s => {
 
-        const change = s.perChange ?? s.perachange ?? 0;
+        const change = s.percentage_change ?? s.percentage_change ?? 0;
         const pos = change >= 0;
 
         const w = Math.round(Math.abs(change) / maxPct * 100);
 
         return `
         <div class="sector-row">
-            <span class="sector-name">${s.index}</span>
+            <span class="sector-name">${s.index_name}</span>
             <div class="bar-track">
                 <div class="bar-fill ${pos ? 'pos' : 'neg'}" style="width:${w}%"></div>
             </div>
@@ -907,12 +911,12 @@ async function fetchNepse() {
 }
 
 // // Optional: run immediately on page load
-fetchNepse();
+// fetchNepse();
 
-// Run every 10 minutes (600,000 ms)
-setInterval(() => {
-    fetchNepse();
-}, 60000);
+// // Run every 10 minutes (600,000 ms)
+// setInterval(() => {
+//     fetchNepse();
+// }, 60000);
 
 
 
