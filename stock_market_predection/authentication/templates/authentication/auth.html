@@ -1,0 +1,262 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% if mode == 'register' %}Create Account{% else %}Sign In{% endif %}
+        — NEPSE Predict
+    </title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+</head>
+
+<body>
+
+    <!-- ── HEADER ── -->
+    <header class="auth-header">
+        <a href="{% url 'home' %}" class="auth-logo">
+            <div class="auth-logo-mark">NPS</div>
+            <div class="auth-logo-text">
+                <span class="auth-logo-name">NEPSE Predict</span>
+                <span class="auth-logo-sub">Nepal Stock Exchange</span>
+            </div>
+        </a>
+    </header>
+
+    <!-- ── MAIN ── -->
+    <main class="auth-main">
+        <div class="auth-card">
+
+            <!-- Card header: title + tab switcher -->
+            <div class="auth-card-head">
+                <div class="auth-tabs">
+                    <a href="{% url 'login' %}" class="auth-tab {% if mode != 'register' %}active{% endif %}">
+                        Sign In
+                    </a>
+                    <a href="{% url 'register' %}" class="auth-tab {% if mode == 'register' %}active{% endif %}">
+                        Register
+                    </a>
+                </div>
+            </div>
+
+            <!-- ════════════════════════════════════
+           LOGIN FORM
+      ════════════════════════════════════ -->
+            {% if mode != 'register' %}
+
+            <div class="auth-card-body">
+                <p class="auth-welcome">Welcome back. Sign in to your account.</p>
+
+                <!-- Non-field errors -->
+                {% if form.non_field_errors %}
+                <div class="auth-alert auth-alert-error">
+                    {% for error in form.non_field_errors %}
+                    <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Django success/error messages -->
+                {% if messages %}
+                {% for message in messages %}
+                <div class="auth-alert auth-alert-{{ message.tags }}">
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <form method="post" action="{% url 'login' %}" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next }}">
+
+                    <!-- Username -->
+                    <div class="auth-field {% if form.username.errors %}has-error{% endif %}">
+                        <label class="auth-label" for="{{ form.username.id_for_label }}">
+                            Username
+                        </label>
+                        <input type="text" id="{{ form.username.id_for_label }}" name="{{ form.username.html_name }}"
+                            class="auth-input" placeholder="Enter your username"
+                            value="{{ form.username.value|default_if_none:'' }}" autocomplete="username" autofocus>
+                        {% if form.username.errors %}
+                        <span class="auth-field-error">{{ form.username.errors|join:', ' }}</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Password -->
+                    <div class="auth-field {% if form.password.errors %}has-error{% endif %}">
+                        <div class="auth-label-row">
+                            <label class="auth-label" for="{{ form.password.id_for_label }}">
+                                Password
+                            </label>
+                            
+                        </div>
+                        <div class="auth-input-wrap">
+                            <input type="password" id="{{ form.password.id_for_label }}"
+                                name="{{ form.password.html_name }}" class="auth-input"
+                                placeholder="Enter your password" autocomplete="current-password">
+                            <button type="button" class="auth-eye"
+                                onclick="togglePwd('{{ form.password.id_for_label }}', this)" tabindex="-1"
+                                aria-label="Show password">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                        {% if form.password.errors %}
+                        <span class="auth-field-error">{{ form.password.errors|join:', ' }}</span>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="auth-btn">Sign In</button>
+                </form>
+
+                <p class="auth-switch">
+                    Don't have an account?
+                    <a href="{% url 'register' %}">Create one</a>
+                </p>
+            </div>
+
+            <!-- ════════════════════════════════════
+           REGISTER FORM
+      ════════════════════════════════════ -->
+            {% else %}
+
+            <div class="auth-card-body">
+                <p class="auth-welcome">Create your NEPSE Predict account.</p>
+
+                <!-- Non-field errors -->
+                {% if form.non_field_errors %}
+                <div class="auth-alert auth-alert-error">
+                    {% for error in form.non_field_errors %}
+                    <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if messages %}
+                {% for message in messages %}
+                <div class="auth-alert auth-alert-{{ message.tags }}">
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <form method="post" action="{% url 'register' %}" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Username -->
+                    <div class="auth-field {% if form.username.errors %}has-error{% endif %}">
+                        <label class="auth-label" for="{{ form.username.id_for_label }}">
+                            Username
+                        </label>
+                        <input type="text" id="{{ form.username.id_for_label }}" name="{{ form.username.html_name }}"
+                            class="auth-input" placeholder="Choose a username"
+                            value="{{ form.username.value|default_if_none:'' }}" autocomplete="username" autofocus>
+                        {% if form.username.errors %}
+                        <span class="auth-field-error">{{ form.username.errors|join:', ' }}</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Email -->
+                    <div class="auth-field {% if form.email.errors %}has-error{% endif %}">
+                        <label class="auth-label" for="{{ form.email.id_for_label }}">
+                            Email Address
+                        </label>
+                        <input type="email" id="{{ form.email.id_for_label }}" name="{{ form.email.html_name }}"
+                            class="auth-input" placeholder="you@example.com"
+                            value="{{ form.email.value|default_if_none:'' }}" autocomplete="email">
+                        {% if form.email.errors %}
+                        <span class="auth-field-error">{{ form.email.errors|join:', ' }}</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Password1 -->
+                    <div class="auth-field {% if form.password1.errors %}has-error{% endif %}">
+                        <label class="auth-label" for="{{ form.password1.id_for_label }}">
+                            Password
+                        </label>
+                        <div class="auth-input-wrap">
+                            <input type="password" id="{{ form.password1.id_for_label }}"
+                                name="{{ form.password1.html_name }}" class="auth-input" placeholder="Create a password"
+                                autocomplete="new-password">
+                            <button type="button" class="auth-eye"
+                                onclick="togglePwd('{{ form.password1.id_for_label }}', this)" tabindex="-1"
+                                aria-label="Show password">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                        {% if form.password1.errors %}
+                        <span class="auth-field-error">{{ form.password1.errors|join:', ' }}</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Password2 -->
+                    <div class="auth-field {% if form.password2.errors %}has-error{% endif %}">
+                        <label class="auth-label" for="{{ form.password2.id_for_label }}">
+                            Confirm Password
+                        </label>
+                        <div class="auth-input-wrap">
+                            <input type="password" id="{{ form.password2.id_for_label }}"
+                                name="{{ form.password2.html_name }}" class="auth-input"
+                                placeholder="Re-enter your password" autocomplete="new-password">
+                            <button type="button" class="auth-eye"
+                                onclick="togglePwd('{{ form.password2.id_for_label }}', this)" tabindex="-1"
+                                aria-label="Show password">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                        {% if form.password2.errors %}
+                        <span class="auth-field-error">{{ form.password2.errors|join:', ' }}</span>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="auth-btn">Create Account</button>
+                </form>
+
+                <p class="auth-switch">
+                    Already have an account?
+                    <a href="{% url 'login' %}">Sign in</a>
+                </p>
+            </div>
+
+            {% endif %}
+
+        </div><!-- /.auth-card -->
+
+        <p class="auth-disclaimer">
+            This system is for academic &amp; educational use only —
+            not financial advice.
+        </p>
+    </main>
+
+    <script>
+        function togglePwd(fieldId, btn) {
+            const input = document.getElementById(fieldId);
+            const isText = input.type === 'text';
+            input.type = isText ? 'password' : 'text';
+            btn.setAttribute('aria-label', isText ? 'Show password' : 'Hide password');
+            /* swap icon: open eye vs crossed eye */
+            btn.innerHTML = isText
+                ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
+                : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+        }
+    </script>
+
+</body>
+
+</html>

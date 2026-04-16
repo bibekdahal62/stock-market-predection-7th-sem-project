@@ -1,0 +1,135 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In — NEPSE Predict</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+</head>
+
+<body>
+
+    <!-- ── HEADER ── -->
+    <header class="auth-header">
+        <a href="{% url 'home' %}" class="auth-logo">
+            <div class="auth-logo-mark">NPS</div>
+            <div class="auth-logo-text">
+                <span class="auth-logo-name">NEPSE Predict</span>
+                <span class="auth-logo-sub">Nepal Stock Exchange</span>
+            </div>
+        </a>
+    </header>
+
+    <!-- ── MAIN ── -->
+    <main class="auth-main">
+        <div class="auth-card">
+
+            <!-- Card header: tab switcher -->
+            <div class="auth-card-head">
+                <div class="auth-tabs">
+                    <a href="{% url 'login' %}" class="auth-tab active">Sign In</a>
+                    <a href="{% url 'register' %}" class="auth-tab">Register</a>
+                </div>
+            </div>
+
+            <div class="auth-card-body">
+                <p class="auth-welcome">Welcome back. Sign in to your account.</p>
+
+                <!-- Non-field errors -->
+                {% if form.non_field_errors %}
+                <div class="auth-alert auth-alert-error">
+                    {% for error in form.non_field_errors %}
+                    <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Django messages -->
+                {% if messages %}
+                {% for message in messages %}
+                <div class="auth-alert auth-alert-{{ message.tags }}">
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <form method="post" action="{% url 'login' %}" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Email -->
+                    <div class="auth-field {% if form.useremail.errors %}has-error{% endif %}">
+                        <label class="auth-label" for="{{ form.useremail.id_for_label }}">
+                            Email Address
+                        </label>
+                        <input type="email" id="{{ form.useremail.id_for_label }}" name="{{ form.useremail.html_name }}"
+                            class="auth-input" placeholder="you@example.com"
+                            value="{{ form.useremail.value|default_if_none:'' }}" autocomplete="email" autofocus>
+                        {% if form.useremail.errors %}
+                        <span class="auth-field-error">{{ form.useremail.errors|join:', ' }}</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Password -->
+                    <div class="auth-field {% if form.password.errors %}has-error{% endif %}">
+                        <div class="auth-label-row">
+                            <label class="auth-label" for="{{ form.password.id_for_label }}">
+                                Password
+                            </label>
+                            <a href="#" class="auth-forgot">Forgot password?</a>
+                        </div>
+                        <div class="auth-input-wrap">
+                            <input type="password" id="{{ form.password.id_for_label }}"
+                                name="{{ form.password.html_name }}" class="auth-input"
+                                placeholder="Enter your password" autocomplete="current-password">
+                            <button type="button" class="auth-eye"
+                                onclick="togglePwd('{{ form.password.id_for_label }}', this)" tabindex="-1"
+                                aria-label="Show password">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                        {% if form.password.errors %}
+                        <span class="auth-field-error">{{ form.password.errors|join:', ' }}</span>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="auth-btn">Sign In</button>
+                </form>
+
+                <p class="auth-switch">
+                    Don't have an account?
+                    <a href="{% url 'register' %}">Create one</a>
+                </p>
+            </div>
+
+        </div><!-- /.auth-card -->
+
+        <p class="auth-disclaimer">
+            This system is for academic &amp; educational use only —
+            not financial advice.
+        </p>
+    </main>
+
+    <script>
+        function togglePwd(fieldId, btn) {
+            const input = document.getElementById(fieldId);
+            const isText = input.type === 'text';
+            input.type = isText ? 'password' : 'text';
+            btn.setAttribute('aria-label', isText ? 'Show password' : 'Hide password');
+            btn.innerHTML = isText
+                ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
+                : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+        }
+    </script>
+
+</body>
+
+</html>

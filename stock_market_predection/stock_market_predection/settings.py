@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'api',
     'prediction',
     'scheduler_app',
+    'authentication',
 ]
 
 MIDDLEWARE = [

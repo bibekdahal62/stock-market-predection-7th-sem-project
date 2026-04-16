@@ -23,6 +23,7 @@ urlpatterns = [
     path('stock/', include('stock_data.urls')),
     path('', include('dashboard.urls')),
     path('api/', include('api.urls')),
-    path('', include('prediction.urls'))
+    path('', include('prediction.urls')),
+    path('', include('authentication.urls')),
 
 ]

@@ -1,8 +1,7 @@
-
 /* ─────────────────────────────────────────
    NEPSE Dashboard — Profile Section Styles
    ───────────────────────────────────────── */
- 
+
 /* ── Wrapper: sits to the right of the live pill ── */
 .profile-section {
   display: flex;
@@ -11,7 +10,7 @@
   margin-left: 12px;
   flex-shrink: 0;
 }
- 
+
 /* ── Avatar icon circle ── */
 .profile-avatar {
   width: 36px;
@@ -24,12 +23,13 @@
   justify-content: center;
   flex-shrink: 0;
 }
+
 .profile-avatar svg {
   width: 18px;
   height: 18px;
   color: var(--green);
 }
- 
+
 /* ── Username label ── */
 .profile-name {
   font-size: 13px;
@@ -38,13 +38,13 @@
   font-family: var(--sans);
   white-space: nowrap;
 }
- 
+
 /* ── Button group ── */
 .profile-btns {
   display: flex;
   gap: 6px;
 }
- 
+
 /* ── Login button — blue filled ── */
 .btn-login {
   padding: 6px 14px;
@@ -62,10 +62,34 @@
   transition: opacity 0.15s;
   white-space: nowrap;
 }
+
 .btn-login:hover {
   opacity: 0.85;
 }
- 
+
+/* ── Register button — green filled ── */
+.btn-register {
+  padding: 6px 14px;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--sans);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+.btn-register:hover {
+  opacity: 0.85;
+}
+
+
 /* ── Logout button — light gray outlined ── */
 .btn-logout {
   padding: 6px 14px;
@@ -83,36 +107,72 @@
   transition: background 0.15s, border-color 0.15s;
   white-space: nowrap;
 }
+
 .btn-logout:hover {
   background: var(--gray-200);
   border-color: var(--gray-400);
 }
- 
- 
+
+
 /* ═══════════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════════ */
- 
+
 /* Tablet: ≤ 900px — hide the name label */
 @media (max-width: 900px) {
-  .profile-name    { display: none; }
-  .profile-section { gap: 8px; margin-left: 8px; }
+  .profile-name {
+    display: none;
+  }
+
+  .profile-section {
+    gap: 8px;
+    margin-left: 8px;
+  }
 }
- 
+
 /* Mobile large: ≤ 640px — shrink button text size and padding */
 @media (max-width: 640px) {
-  .profile-avatar      { width: 30px; height: 30px; }
-  .profile-avatar svg  { width: 15px; height: 15px; }
+  .profile-avatar {
+    width: 30px;
+    height: 30px;
+  }
+
+  .profile-avatar svg {
+    width: 15px;
+    height: 15px;
+  }
+
   .btn-login,
-  .btn-logout          { padding: 5px 10px; font-size: 12px; }
-  .profile-section     { gap: 6px; margin-left: 6px; }
+  .btn-logout {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .profile-section {
+    gap: 6px;
+    margin-left: 6px;
+  }
 }
- 
+
 /* Mobile small: ≤ 420px — tighter spacing */
 @media (max-width: 420px) {
-  .profile-avatar  { width: 28px; height: 28px; }
+  .profile-avatar {
+    width: 28px;
+    height: 28px;
+  }
+
   .btn-login,
-  .btn-logout      { padding: 5px 8px; font-size: 11px; }
-  .profile-btns    { gap: 4px; }
-  .profile-section { margin-left: 4px; gap: 4px; }
+  .btn-logout {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
+  .profile-btns {
+    gap: 4px;
+  }
+
+  .profile-section {
+    margin-left: 4px;
+    gap: 4px;
+  }
 }
