@@ -12,6 +12,7 @@ urlpatterns = [
     path('index-chart/', views.index_chart),
     path('latest-chart/', views.index_chart_latest),
     # path('fetch-nepse/', views.fetch_and_store_nepse, name='fetch-nepse'),
-    path('stock-data/', views.stock_data, name='stock_data')
+    path('stock-data/', views.stock_data, name='stock_data'),
+    path('market-status/', views.market_status, name='market-status'),
 
 ]

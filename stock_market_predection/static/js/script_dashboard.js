@@ -1,8 +1,9 @@
 let marketStatusInterval = null;
 
 
-function marketStatus(data){
-
+async function marketStatus(){
+    const res = await fetch('/api/market-status/');
+    const data = await res.json();
     const status = document.querySelector('#market-status');
 
     if (data.isOpen === 'OPEN') {
@@ -162,7 +163,7 @@ async function updateData() {
     
     // console.log('market status: ', data.isOpen)
 
-    marketStatus(data);
+    marketStatus();
 
 
 }

@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+{% block title %} {{ title }} {% endblock %}
+
+{% block extracss %}
+
+<link rel="stylesheet" href="{% static 'css/about.css' %}">
+
+{% endblock %}
+
+{% block content %}
+<main class="about-main">
+
+    <!-- ══════════════════════════════════════
+         HERO SECTION
+    ══════════════════════════════════════ -->
+    <section class="hero">
+        <div class="hero-inner">
+            <div class="hero-badge">BSc. CSIT · 7th Semester Project · 2026</div>
+            <h1 class="hero-title">
+                Predicting the Market,<br>
+                <span class="hero-title-accent">One Model at a Time.</span>
+            </h1>
+            <p class="hero-desc">
+                Hamro Stock started as a semester project and grew into something
+                we're genuinely proud of. Three computer science students, one shared
+                curiosity about financial markets, and a lot of late nights at the
+                Birat Multiple College library.
+            </p>
+            <div class="hero-tags">
+                <span class="tag tag-green">Machine Learning</span>
+                <span class="tag tag-blue">LSTM · Random Forest</span>
+                <span class="tag tag-gray">Python · Django · React</span>
+                <span class="tag tag-gray">NEPSE Data</span>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+
+        <!-- ══════════════════════════════════════
+           ABOUT THE PROJECT
+      ══════════════════════════════════════ -->
+        <section class="section">
+            <div class="section-grid">
+                <div class="section-text">
+                    <div class="section-label">The Project</div>
+                    <h2 class="section-title">Why we built this</h2>
+                    <p>
+                        If you've ever tried to invest in Nepal's stock market, you'll know
+                        the frustration — most tools stop at showing you yesterday's charts.
+                        There's very little that actually tries to look ahead, especially for
+                        ordinary investors who don't have the time to analyse hundreds of data
+                        points manually.
+                    </p>
+                    <p>
+                        That's the gap we wanted to close. Hamro Stock applies two
+                        machine learning models — <strong>LSTM</strong> (Long Short-Term
+                        Memory networks) and <strong>Random Forest</strong> — to historical
+                        NEPSE stock data and produces short-term price trend forecasts in a
+                        form that's easy to read and act on.
+                    </p>
+                    <p>
+                        It's built for students, curious investors, and anyone who wants to
+                        understand the market a little better. We're very clear that this is
+                        an educational tool — the predictions are not financial advice — but
+                        we do believe data-driven thinking leads to better decisions.
+                    </p>
+                </div>
+                <div class="section-stats">
+                    <div class="stat-box">
+                        <div class="stat-num">2+</div>
+                        <div class="stat-lbl">NEPSE stocks covered</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num">2</div>
+                        <div class="stat-lbl">ML models implemented</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num">87%</div>
+                        <div class="stat-lbl">LSTM backtested accuracy</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num">7 days</div>
+                        <div class="stat-lbl">Max forecast horizon</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════
+           TEAM SECTION
+      ══════════════════════════════════════ -->
+        <section class="section">
+            <div class="section-label">The Team</div>
+            <h2 class="section-title">The people behind the code</h2>
+            <p class="section-intro">
+                We're three friends from the BSc. CSIT programme at Birat Multiple
+                College, Biratnagar. This project gave us the chance to combine
+                everything we'd been learning — from data structures and algorithms
+                to machine learning and web development — into something real.
+            </p>
+
+            <div class="team-grid">
+
+                <!-- Member 1 -->
+                <div class="team-card">
+                    <div class="team-avatar" style="background: linear-gradient(135deg, #0a7c4e, #12a066);">
+                        <span>BD</span>
+                    </div>
+                    <div class="team-info">
+                        <div class="team-name">Bibek Dahal</div>
+                        <div class="team-roll">Roll No. 79011625</div>
+                        <div class="team-role-badge">ML Engineer &amp; Backend</div>
+                        <p class="team-bio">
+                            Bibek led the machine learning side of the project — building and
+                            training the LSTM and Random Forest models, handling data
+                            preprocessing, and writing the Django REST APIs that power the
+                            prediction engine. He has a deep interest in how patterns in
+                            financial time-series data can be made useful for everyday people.
+                        </p>
+                        <div class="team-skills">
+                            <span class="skill">Python</span>
+                            <span class="skill">TensorFlow</span>
+                            <span class="skill">Scikit-learn</span>
+                            <span class="skill">Django</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Member 2 -->
+                <div class="team-card">
+                    <div class="team-avatar" style="background: linear-gradient(135deg, #1a4f8a, #2563b0);">
+                        <span>PP</span>
+                    </div>
+                    <div class="team-info">
+                        <div class="team-name">Prajwal Parajuli</div>
+                        <div class="team-roll">Roll No. 79011636</div>
+                        <div class="team-role-badge">Frontend &amp; UI/UX</div>
+                        <p class="team-bio">
+                            Prajwal designed and built the user interface — from the live
+                            market dashboard to the prediction charts and responsive layouts.
+                            His goal was to make the system feel welcoming to someone who
+                            has never used a financial platform before, not just to developers.
+                            He also handled the data visualisation work using Chart.js and React.
+                        </p>
+                        <div class="team-skills">
+                            <span class="skill">HTML</span>
+                            <span class="skill">CSS</span>
+                            <span class="skill">JavaScript</span>
+                            <span class="skill">Chart.js</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Member 3 -->
+                <div class="team-card">
+                    <div class="team-avatar" style="background: linear-gradient(135deg, #b45309, #d97706);">
+                        <span>RP</span>
+                    </div>
+                    <div class="team-info">
+                        <div class="team-name">Roshan Parajuli</div>
+                        <div class="team-roll">Roll No. 79011640</div>
+                        <div class="team-role-badge">Data &amp; Research</div>
+                        <p class="team-bio">
+                            Roshan managed the data pipeline — collecting, cleaning and
+                            structuring historical NEPSE stock data — and conducted the
+                            literature review that shaped the project's direction. He also
+                            handled database design using PostgreSQL and made sure the
+                            system was properly documented for academic submission and future
+                            development.
+                        </p>
+                        <div class="team-skills">
+                            <span class="skill">Data Analysis</span>
+                            <span class="skill">PostgreSQL</span>
+                            <span class="skill">Pandas</span>
+                            <span class="skill">Documentation</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════
+           TECH STACK
+      ══════════════════════════════════════ -->
+        <section class="section">
+            <div class="section-label">Technology</div>
+            <h2 class="section-title">What we used to build it</h2>
+            <p class="section-intro">
+                We chose tools that are industry-standard, well-documented, and
+                genuinely well-suited to the problem — not just whatever was trending.
+            </p>
+
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <div class="tech-icon tech-icon-green">🐍</div>
+                    <div class="tech-name">Python</div>
+                    <div class="tech-desc">Core language for machine learning, data processing and backend logic.</div>
+                </div>
+
+                <div class="tech-card">
+                    <div class="tech-icon tech-icon-green">🦄</div>
+                    <div class="tech-name">Django &amp; DRF</div>
+                    <div class="tech-desc">Backend framework and REST API layer connecting the ML models to the
+                        frontend.</div>
+                </div>
+
+                <!-- Replaced React with HTML/CSS/JS -->
+                <div class="tech-card">
+                    <div class="tech-icon tech-icon-blue">🌐</div>
+                    <div class="tech-name">HTML, CSS &amp; JavaScript</div>
+                    <div class="tech-desc">
+                        Used to build responsive UI, dashboards, charts and dynamic interactions for users.
+                    </div>
+                </div>
+
+                <div class="tech-card">
+                    <div class="tech-icon tech-icon-blue">🧠</div>
+                    <div class="tech-name">TensorFlow / Keras</div>
+                    <div class="tech-desc">Used to build and train the LSTM neural network for next-day price
+                        prediction.</div>
+                </div>
+
+                <div class="tech-card">
+                    <div class="tech-icon tech-icon-amber">🌲</div>
+                    <div class="tech-name">Scikit-learn</div>
+                    <div class="tech-desc">Random Forest implementation for multi-day trend forecasting up to 7 days.
+                    </div>
+                </div>
+
+                <div class="tech-card">
+                    <div class="tech-icon tech-icon-gray">🐘</div>
+                    <div class="tech-name">PostgreSQL</div>
+                    <div class="tech-desc">Relational database storing historical NEPSE data and prediction results.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════
+           INSTITUTION SECTION
+      ══════════════════════════════════════ -->
+        <section class="section">
+            <div class="institution-card">
+                <div class="institution-left">
+                    <div class="institution-label">Submitted To</div>
+                    <div class="institution-name">Birat Multiple College</div>
+                    <div class="institution-detail">Biratnagar-3, Morang, Nepal</div>
+                    <div class="institution-prog">BSc. CSIT — VII Semester, 2026</div>
+                    <p class="institution-note">
+                        This project was developed as the final semester project for the
+                        Bachelor of Science in Computer Science and Information Technology
+                        programme at Birat Multiple College, affiliated to Tribhuvan University.
+                        It is intended entirely for academic and educational purposes.
+                    </p>
+                </div>
+                <div class="institution-right">
+                    <div class="disclaimer-box">
+                        <div class="disclaimer-title">⚠ Important Disclaimer</div>
+                        <p>
+                            Hamro Stock is an academic project. All predictions generated
+                            by this system are based on historical data patterns and machine
+                            learning models with inherent limitations.
+                        </p>
+                        <p>
+                            <strong>This is not financial advice.</strong> Do not make
+                            investment decisions based solely on this system. Always consult
+                            a qualified financial advisor before investing.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+</main>
+
+{% endblock %}
+
+
+{% block extra_script %}
+<script>
+    async function getMarketStatus() {
+        const res = await fetch('/api/market-status/');
+        const data = await res.json();
+
+        const status = document.querySelector('#market-status');
+
+        if (data.isOpen === 'OPEN') {
+            status.innerHTML = '<span class="live-dot"></span> OPEN</div>'
+            status.classList.remove('close-pill');
+            status.classList.add('live-pill');
+
+
+            // 👉 start interval ONLY if not already running
+            // if (!marketStatusInterval) {
+            //     marketStatusInterval = setInterval(updateData, 200000); // 10 sec
+            // }
+
+        } else {
+            status.innerHTML = '<span class="close-dot"></span> CLOSE</div>'
+            status.classList.remove('live-pill');
+            status.classList.add('close-pill');
+            // marketTime.innerText = 'As of: ' + formatted;
+
+            // 👉 stop auto refresh when market is closed
+            // if (marketStatusInterval) {
+            //     clearInterval(marketStatusInterval);
+            //     marketStatusInterval = null;
+            // }
+
+        }
+    }
+    getMarketStatus();
+    setInterval(getMarketStatus, 60000);
+</script>
+{% endblock %}

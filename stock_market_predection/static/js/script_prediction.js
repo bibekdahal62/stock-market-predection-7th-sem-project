@@ -1,7 +1,7 @@
 // MODEL DATA
 
 async function getMarketStatus() {
-  const res = await fetch('/api/stock-data/');
+  const res = await fetch('/api/market-status/');
   const data = await res.json();
 
   const status = document.querySelector('#market-status');

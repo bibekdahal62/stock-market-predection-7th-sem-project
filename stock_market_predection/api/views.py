@@ -19,6 +19,17 @@ logger = logging.getLogger(__name__)
 # Create your views here.
 
 @api_view(['GET'])
+def market_status(request):
+
+    nepse = Nepse()
+    status = nepse.get_market_status()
+    return Response({
+        'isOpen': status.get('isOpen', False),
+    })
+
+
+
+@api_view(['GET'])
 def stock_data(request):
     try:
         nepse = Nepse()
@@ -112,7 +123,7 @@ def stock_data(request):
             'nepseIndex': nepse_index,
             'nepseValChange': nepse_index_change,
             'nepsePerChange': nepse_index_per_change,
-            'isOpen': status.get('isOpen', False),
+            
             'asOf': status.get('asOf', None),
 
             'market_breadth': market_breadth_serializer.data,

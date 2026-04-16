@@ -7,16 +7,17 @@ from . import predictor_lstm, predictor_rf, predictor_lstm_2m
 import os
 from .models import Upper, Hbl
 from .serializers import UpperSerializer, HblSerializer
+from django.contrib.auth.decorators import login_required
 
 
 # Create your views here.
 BASE= Path(__file__).resolve().parent.parent
 
-
+@login_required
 def index(request):
 
     return render(request, 'prediction/pred.html', {
-
+        'title': 'Predict Stocks',
     })
 
 
@@ -58,6 +59,7 @@ model_serializers = {
     'upper': UpperSerializer,
     'hbl': HblSerializer
 }
+
 
 @api_view(['GET'])
 def predection_data(request, stock):

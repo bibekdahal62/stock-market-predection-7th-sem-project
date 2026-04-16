@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from nepse_data_api import Nepse
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 # nepse = Nepse()
@@ -26,22 +27,17 @@ from nepse_data_api import Nepse
 #     reverse=True
 # )[:9]
 
+
 def home(request):
 
     return render(request, 'dashboard/index.html', {
-        # 'title': 'Home',
-        # 'market_status': market_status['isOpen'],
-        # 'trunover': market_summary[0]['value'] / 1000000000,
-        # 'shares': market_summary[1]['value'] / 1000000,
-        # 'transactions': market_summary[2]['value'],
-        # # 'captalizaton': market_summary[4]['value'] / 1000000000000,
-        # # 'floatcaptalizaton': market_summary[5]['value'] / 1000000000000,
-        # 'nepse_index': nepse_idex[1]['currentValue'],
-        # 'nepse_index_change': nepse_idex[1]['change'],
-        # 'nepse_index_per_change': nepse_idex[1]['perChange'],
-        # 'gainers': gainers,
-        # 'loosers': loosers,
-        # 'sectors': sectors,
-        # 'max_pct': max_pct,
-        # 'high_by_volume': top_9_active
+        'title': 'Dashboard',
+    })
+
+
+@login_required
+def about(request):
+
+    return render(request, 'dashboard/about.html', {
+        'title': 'About Us',
     })
