@@ -5,8 +5,8 @@ from pathlib import Path
 import pandas as pd
 from . import predictor_lstm, predictor_rf, predictor_lstm_2m
 import os
-from .models import Upper, Hbl
-from .serializers import UpperSerializer, HblSerializer
+from .models import Upper, Hbl, UpperLive, HblLive
+from .serializers import UpperSerializer, HblSerializer, UpperLiveSerializer, HblLiveSerializer
 from django.contrib.auth.decorators import login_required
 
 
@@ -52,12 +52,22 @@ stock_names = {
 
 stock_models = {
     'upper': Upper,
-    'hbl': Hbl
+    'hbl': Hbl,
+}
+
+live_stock_models = {
+    'upper': UpperLive,
+    'hbl': HblLive,
 }
 
 model_serializers = {
     'upper': UpperSerializer,
-    'hbl': HblSerializer
+    'hbl': HblSerializer,
+}
+
+live_models_serializer = {
+    'upper': UpperLiveSerializer,
+    'hbl': HblLiveSerializer,
 }
 
 
@@ -96,3 +106,16 @@ def predection_data(request, stock):
             'rf_pred': None,
             'lstm_pred': None
         })
+
+
+
+@api_view(['GET'])
+def live_stock_data(request, stock):
+
+
+    if stock in live_stock_models:
+        data = live_stock_models[stock].objects.order_by('-timestamp').first()
+        sd = live_models_serializer[stock]
+        serializer = sd(data)
+
+    return Response(serializer.data)

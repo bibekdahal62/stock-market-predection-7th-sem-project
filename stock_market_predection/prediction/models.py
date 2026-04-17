@@ -45,3 +45,49 @@ class Hbl(models.Model):
 
     def __str__(self):
         return f"{self.published_date} - {self.close}"
+    
+
+
+class UpperLive(models.Model):
+    timestamp = models.DateTimeField()
+    current = models.FloatField(null=True, blank=True)
+    open = models.FloatField()
+    high = models.FloatField()
+    low = models.FloatField()
+    close = models.FloatField()
+    per_change = models.FloatField()
+    traded_quantity = models.FloatField()
+    traded_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    status = models.IntegerField()
+
+    class Meta:
+        db_table = "upperLive"
+        ordering = ["-timestamp"]
+        verbose_name = "UpperLive"
+        verbose_name_plural = "UpperLive"
+
+    def __str__(self):
+        return f"{self.timestamp} - {self.close}"
+    
+
+
+class HblLive(models.Model):
+    timestamp = models.DateTimeField()
+    current = models.FloatField(null=True, blank=True)
+    open = models.FloatField()
+    high = models.FloatField()
+    low = models.FloatField()
+    close = models.FloatField()
+    per_change = models.FloatField()
+    traded_quantity = models.FloatField()
+    traded_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    status = models.IntegerField()
+
+    class Meta:
+        db_table = "HblLive"
+        ordering = ["-timestamp"]
+        verbose_name = "HblLive"
+        verbose_name_plural = "HblLive"
+
+    def __str__(self):
+        return f"{self.timestamp} - {self.close}"

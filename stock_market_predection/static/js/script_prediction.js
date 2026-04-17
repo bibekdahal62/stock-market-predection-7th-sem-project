@@ -203,12 +203,12 @@ function refreshPrediction() {
   const pointRadiusArray = [...Array(histPrices.length).fill(0), ...Array(predData.length).fill(4)];
 
   // Update metric cards using actual data
-  const todayHigh = apiData.data[0].high;
-  const todayLow = apiData.data[0].low;
+  const todayHigh = apiData.data[0].high.toFixed(2);
+  const todayLow = apiData.data[0].low.toFixed(2);
   const highChg = ((todayHigh - currentPrice) / currentPrice * 100).toFixed(2);
   const lowChg = ((todayLow - currentPrice) / currentPrice * 100).toFixed(2);
 
-  document.getElementById('pm-cur').textContent = `NPR ${currentPrice.toLocaleString()}`;
+  document.getElementById('pm-cur').textContent = `NPR ${currentPrice.toFixed(2).toLocaleString()}`;
   document.getElementById('pm-stock').textContent = `${symbol} · Today`;
   document.getElementById('pm-high').textContent = `NPR ${todayHigh.toLocaleString()}`;
   document.getElementById('pm-high-chg').innerHTML = `▲ +${highChg}%`;
@@ -432,3 +432,43 @@ function removeAccuracyDisplay() {
   const initialStock = document.getElementById('stock-sel').value;
   fetchStockData(initialStock);
 })();
+
+
+async function liveDataChange() {
+  try {
+    const symbol = document.getElementById('stock-sel').value;
+    const res = await fetch(`/prediction/live-stock-data/${symbol}/`);
+
+    if (!res.ok) throw new Error(res.status);
+
+    const data = await res.json();
+
+    const currentValue = document.getElementById('pm-cur');
+    const highValue = document.getElementById('pm-high');
+    const lowValue = document.getElementById('pm-low');
+    const highPer = document.getElementById('pm-high-chg');
+    const lowPer = document.getElementById('pm-low-chg');
+
+    const current = parseFloat(data.current);
+    const high = parseFloat(data.high);
+    const low = parseFloat(data.low);
+
+    currentValue.innerText = "NPR " + current.toFixed(2);
+    document.getElementById('pm-stock').textContent = `${symbol} · Today`;
+    highValue.innerText = "NPR " +  high.toFixed(2);
+    lowValue.innerText = "NPR " +  low.toFixed(2);
+
+    const highPercentage = ((high - current) / current) * 100;
+    const lowPercentage = ((low - current) / current) * 100;
+
+    highPer.innerText = "▲ " + "+" + highPercentage.toFixed(2) + "%";
+    lowPer.innerText = "▼ " + lowPercentage.toFixed(2) + "%";
+
+    console.log("live data changed successfully");
+  } catch (e) {
+    console.error("Live data fetch failed:", e);
+  }
+}
+
+liveDataChange();
+setInterval(liveDataChange, 60000);

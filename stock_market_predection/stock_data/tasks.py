@@ -3,7 +3,7 @@ from nepse_data_api import Nepse
 from datetime import time
 from .models import MostActiveStocks, NepseIndexData, NepseIndex, Gainer, Loser, Sector, MarketBreadth
 from django.db import transaction
-from prediction.models import Upper, Hbl
+from prediction.models import Upper, Hbl, UpperLive, HblLive
 import logging
 logger = logging.getLogger(__name__)
 
@@ -197,6 +197,35 @@ def store_data():
                     negative_circuit=negative_circuit,
                 )
                 logger.info("Market Breadth snapshot stored.")
+
+                for stock in stocks:
+                    if stock['symbol'] == 'UPPER':
+                        UpperLive.objects.create(
+                            timestamp = now,
+                            current= stock[''],
+                            open = stock['openPrice'],
+                            high=stock['highPrice'],
+                            low= stock['lowPrice'],
+                            close= stock['lastTradedPrice'],
+                            per_change=stock['percentageChange'],
+                            traded_quantity= stock['totalTradeQuantity'],
+                            traded_amount=stock['totalTradeValue'],
+                            status = -1 if per_change < 0 else (1 if per_change > 0 else 0)
+                            )
+                    elif stock['symbol'] == 'HBL':
+                        HblLive.objects.create(
+                            timestamp = now,
+                            current= stock[''],
+                            open = stock['openPrice'],
+                            high=stock['highPrice'],
+                            low= stock['lowPrice'],
+                            close= stock['lastTradedPrice'],
+                            per_change=stock['percentageChange'],
+                            traded_quantity= stock['totalTradeQuantity'],
+                            traded_amount=stock['totalTradeValue'],
+                            status = -1 if per_change < 0 else (1 if per_change > 0 else 0)
+                            )
+                logger.info("Live stock stock summary stored...")
 
             # Store end-of-day summary (15:00–15:01)
             if time(15, 0) <= now.time() <= time(15, 1):
