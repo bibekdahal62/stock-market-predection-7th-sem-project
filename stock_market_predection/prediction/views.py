@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from pathlib import Path
 import pandas as pd
-from . import predictor_lstm, predictor_rf, predictor_lstm_2m
+from . import predictor_lstm, predictor_lstm_gru, predictor_rf
 import os
 from .models import Upper, Hbl, UpperLive, HblLive
 from .serializers import UpperSerializer, HblSerializer, UpperLiveSerializer, HblLiveSerializer
@@ -26,26 +26,32 @@ stock_names = {
         'rf':{
             'model_dir': os.path.join(BASE, 'prediction','saved_models', 'upper')
         }, 
-        # 'lstm': {
-        #     "model1": os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "two_models","upper_lstm_model1_30d.keras"),
-        #     "model2": os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "two_models","upper_lstm_model2_15d.keras"),
-        #     "scaler_feature_path": os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "two_models","scaler_features.pkl"),
-        #     "scaler_target_path": os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "two_models","scaler_targets.pkl")
-        # }
         'lstm': {
-            'model_path': os.path.join(BASE, "prediction", "saved_models", "lstm", "upper","upper_lstm.keras"),
-            'scaler_feature_path': os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "scaler_features.pkl"),
-            'scaler_target_path': os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "scaler_targets.pkl")
+            "lstm_model": os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "two_models","lstm_model_30d.keras"),
+            "gru_model": os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "two_models","gru_model_15d.keras"),
+            "scaler_feature_path": os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "two_models","scaler_features.pkl"),
+            "scaler_target_path": os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "two_models","scaler_targets.pkl")
         }
+        # 'lstm': {
+        #     'model_path': os.path.join(BASE, "prediction", "saved_models", "lstm", "upper","upper_lstm.keras"),
+        #     'scaler_feature_path': os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "scaler_features.pkl"),
+        #     'scaler_target_path': os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "scaler_targets.pkl")
+        # }
     },
     'hbl':{
         'rf':{
             'model_dir': os.path.join(BASE, 'prediction','saved_models', 'hbl')
         }, 
+        # 'lstm': {
+        #     'model_path': os.path.join(BASE, "prediction", "saved_models", "lstm", "hbl","hbl_lstm.keras"),
+        #     'scaler_feature_path': os.path.join(BASE, "prediction", "saved_models", "lstm", "hbl", "scaler_features.pkl"),
+        #     'scaler_target_path': os.path.join(BASE, "prediction", "saved_models", "lstm", "hbl", "scaler_targets.pkl")
+        # }
         'lstm': {
-            'model_path': os.path.join(BASE, "prediction", "saved_models", "lstm", "hbl","hbl_lstm.keras"),
-            'scaler_feature_path': os.path.join(BASE, "prediction", "saved_models", "lstm", "hbl", "scaler_features.pkl"),
-            'scaler_target_path': os.path.join(BASE, "prediction", "saved_models", "lstm", "hbl", "scaler_targets.pkl")
+            "lstm_model": os.path.join(BASE, "prediction", "saved_models", "lstm", "hbl", "two_models","lstm_model_30d.keras"),
+            "gru_model": os.path.join(BASE, "prediction", "saved_models", "lstm", "hbl", "two_models","gru_model_15d.keras"),
+            "scaler_feature_path": os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "two_models","scaler_features.pkl"),
+            "scaler_target_path": os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "two_models","scaler_targets.pkl")
         }
     }
 }
@@ -85,17 +91,25 @@ def predection_data(request, stock):
         model_dir = stock_name['rf']['model_dir']
         random_forest_predection = predictor_rf.predict_upper(model_dir=model_dir, n_days=7, data=qs)
 
-        model_path = stock_name['lstm']['model_path']
+        lstm_model = stock_name['lstm']['lstm_model']
+        gru_model = stock_name['lstm']['gru_model']
         # model_2 = stock_name['lstm']['model2']
         scaler_feature_path = stock_name['lstm']['scaler_feature_path']
         scaler_target_path = stock_name['lstm']['scaler_target_path']
-        lstm_predection = predictor_lstm.predict_next_day(model_path=model_path, scaler_feature_path=scaler_feature_path, scaler_target_path=scaler_target_path, data=qs)
+        # lstm_predection = predictor_lstm.predict_next_day(model_path=model_path, scaler_feature_path=scaler_feature_path, scaler_target_path=scaler_target_path, data=qs)
+        lstm_prediction = predictor_lstm_gru.predict_next_day(
+            data=qs,
+            lstm_model=lstm_model,
+            gru_model=gru_model,
+            scaler_feature=scaler_feature_path,
+            scaler_target=scaler_target_path
+        )
 
         return Response({
             'message': 'success',
             'error': False,
             'rf_pred': random_forest_predection,
-            'lstm_pred': lstm_predection,
+            'lstm_pred': lstm_prediction,
             'data': serializer.data
         })
     

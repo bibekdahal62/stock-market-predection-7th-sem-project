@@ -202,11 +202,11 @@ def store_data():
                     if stock['symbol'] == 'UPPER':
                         UpperLive.objects.create(
                             timestamp = now,
-                            current= stock[''],
+                            ltp= stock['lastTradedPrice'],
                             open = stock['openPrice'],
                             high=stock['highPrice'],
                             low= stock['lowPrice'],
-                            close= stock['lastTradedPrice'],
+                            pr_close= stock['previousClose'],
                             per_change=stock['percentageChange'],
                             traded_quantity= stock['totalTradeQuantity'],
                             traded_amount=stock['totalTradeValue'],
@@ -215,11 +215,11 @@ def store_data():
                     elif stock['symbol'] == 'HBL':
                         HblLive.objects.create(
                             timestamp = now,
-                            current= stock[''],
+                            ltp= stock['lastTradedPrice'],
                             open = stock['openPrice'],
                             high=stock['highPrice'],
                             low= stock['lowPrice'],
-                            close= stock['lastTradedPrice'],
+                            pr_close= stock['previousClose'],
                             per_change=stock['percentageChange'],
                             traded_quantity= stock['totalTradeQuantity'],
                             traded_amount=stock['totalTradeValue'],

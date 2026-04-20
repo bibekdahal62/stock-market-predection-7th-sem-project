@@ -12,11 +12,11 @@ class HblAdmin(admin.ModelAdmin):
 
 
 class UpperLiveAdmin(admin.ModelAdmin):
-    list_display = ('timestamp', 'current', 'open', 'high', 'low', 'close', 'status')
+    list_display = ('timestamp', 'ltp', 'open', 'high', 'low', 'pr_close', 'status')
 
 
 class HblLiveAdmin(admin.ModelAdmin):
-    list_display = ('timestamp', 'current', 'open', 'high', 'low', 'close', 'status')
+    list_display = ('timestamp', 'ltp', 'open', 'high', 'low', 'pr_close', 'status')
 
 
 

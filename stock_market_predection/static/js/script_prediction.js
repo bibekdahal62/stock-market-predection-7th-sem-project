@@ -10,46 +10,185 @@ async function getMarketStatus() {
     status.innerHTML = '<span class="live-dot"></span> OPEN</div>'
     status.classList.remove('close-pill');
     status.classList.add('live-pill');
-
-
-    // 👉 start interval ONLY if not already running
-    // if (!marketStatusInterval) {
-    //     marketStatusInterval = setInterval(updateData, 200000); // 10 sec
-    // }
-
   } else {
     status.innerHTML = '<span class="close-dot"></span> CLOSE</div>'
     status.classList.remove('live-pill');
     status.classList.add('close-pill');
-    // marketTime.innerText = 'As of: ' + formatted;
-
-    // 👉 stop auto refresh when market is closed
-    // if (marketStatusInterval) {
-    //     clearInterval(marketStatusInterval);
-    //     marketStatusInterval = null;
-    // }
-
   }
 }
 getMarketStatus();
 setInterval(getMarketStatus, 60000);
 
-
 const modelAcc = { lstm: 87.4, rf: 83.1 };
 let activeModel = 'lstm';
-let apiData = null; // Store API data for current stock
+let apiData = null; // Store historical/ML data from API
+let currentLiveData = null; // Store current live data
+let liveDataInterval = null;
+let marketStatusInterval = null;
+
+// Function to clear all displayed data
+function clearDisplayData() {
+  // Clear current price
+  const currentPriceElem = document.getElementById('pm-cur');
+  if (currentPriceElem) currentPriceElem.textContent = 'NPR ---';
+  
+  // Clear high and low
+  const highElem = document.getElementById('pm-high');
+  if (highElem) highElem.textContent = 'NPR ---';
+  
+  const lowElem = document.getElementById('pm-low');
+  if (lowElem) lowElem.textContent = 'NPR ---';
+  
+  // Clear high and low changes
+  const highChgElem = document.getElementById('pm-high-chg');
+  if (highChgElem) highChgElem.innerHTML = '▲ ---%';
+  
+  const lowChgElem = document.getElementById('pm-low-chg');
+  if (lowChgElem) lowChgElem.innerHTML = '▼ ---%';
+  
+  // Clear predicted value
+  const predElem = document.getElementById('pm-pred');
+  if (predElem) predElem.textContent = 'NPR ---';
+  
+  const predChangeElem = document.getElementById('pm-chg');
+  if (predChangeElem) predChangeElem.innerHTML = '▲ ---%';
+  
+  // Clear top prediction display
+  // const topPredPrice = document.getElementById('top-pred-price');
+  // if (topPredPrice) topPredPrice.textContent = 'NPR ---';
+  
+  // const topPredChange = document.getElementById('top-pred-change');
+  // if (topPredChange) topPredChange.textContent = '▲ ---%';
+  
+  // Clear prediction table
+  const tableBody = document.getElementById('pred-price-tbody');
+  if (tableBody) {
+    tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:40px;">Loading data...</td></tr>`;
+  }
+  
+  // Clear signal box
+  const sigBox = document.getElementById('signal-box');
+  if (sigBox) {
+    sigBox.className = 'signal-bar hold';
+    sigBox.innerHTML = `<span class="signal-icon">⏳</span><div><div class="signal-label">Loading...</div><div class="signal-detail">Fetching latest stock data...</div></div>`;
+  }
+  
+  // Clear prediction title
+  const predTitle = document.getElementById('pred-title');
+  if (predTitle) predTitle.textContent = 'Loading stock data...';
+  
+  // Clear stock name display
+  const stockDisplay = document.getElementById('pm-stock');
+  if (stockDisplay) stockDisplay.textContent = 'Loading...';
+  
+  // Destroy and clear chart if it exists
+  if (predChart) {
+    predChart.destroy();
+    predChart = null;
+  }
+  
+  // Clear chart canvas
+  const chartCanvas = document.getElementById('predChart');
+  if (chartCanvas) {
+    const ctx = chartCanvas.getContext('2d');
+    ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
+  }
+  
+  // Clear volume chart if it exists
+  if (volChart) {
+    volChart.destroy();
+    volChart = null;
+  }
+  
+  // Clear volume chart canvas
+  const volChartCanvas = document.getElementById('volChart');
+  if (volChartCanvas) {
+    const ctx = volChartCanvas.getContext('2d');
+    ctx.clearRect(0, 0, volChartCanvas.width, volChartCanvas.height);
+  }
+}
+
+// Function to blur the prediction chart
+function blurPredictionChart() {
+  const chartContainer = document.getElementById('predChart')?.parentElement;
+  if (chartContainer) {
+    chartContainer.style.filter = 'blur(4px)';
+    chartContainer.style.transition = 'filter 0.3s ease';
+    
+    // Add loading overlay if not exists
+    let overlay = chartContainer.querySelector('.chart-loading-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'chart-loading-overlay';
+      overlay.innerHTML = `
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading stock data...</div>
+      `;
+      overlay.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        border-radius: 12px;
+      `;
+      chartContainer.style.position = 'relative';
+      chartContainer.appendChild(overlay);
+    } else {
+      overlay.style.display = 'flex';
+    }
+  }
+}
+
+// Function to unblur the prediction chart
+function unblurPredictionChart() {
+  const chartContainer = document.getElementById('predChart')?.parentElement;
+  if (chartContainer) {
+    chartContainer.style.filter = 'blur(0px)';
+    const overlay = chartContainer.querySelector('.chart-loading-overlay');
+    if (overlay) {
+      overlay.style.display = 'none';
+    }
+  }
+}
 
 // Fetch API data based on selected stock symbol
 async function fetchStockData(symbol) {
+  // Clear all displayed data immediately
+  clearDisplayData();
+  
+  // Blur the chart while fetching new data
+  blurPredictionChart();
+  
   try {
     const response = await fetch(`/prediction/prediction-data/${symbol}/`);
     const data = await response.json();
     if (data && !data.error) {
       apiData = data;
+      // After getting historical data, fetch live data
+      await liveDataChange();
       refreshPrediction();
     }
   } catch (error) {
     console.error(`Error fetching ${symbol} data:`, error);
+    // Show error in UI
+    const predTitle = document.getElementById('pred-title');
+    if (predTitle) predTitle.textContent = `Error loading data for ${symbol}`;
+    
+    const sigBox = document.getElementById('signal-box');
+    if (sigBox) {
+      sigBox.className = 'signal-bar hold';
+      sigBox.innerHTML = `<span class="signal-icon">⚠️</span><div><div class="signal-label">Error</div><div class="signal-detail">Failed to load data. Please try again.</div></div>`;
+    }
+  } finally {
+    // Unblur the chart after data is loaded (even if error)
+    unblurPredictionChart();
   }
 }
 
@@ -62,27 +201,36 @@ function pickModel(labelEl, m) {
   const horizSel = document.getElementById('horizon-sel');
   if (m === 'lstm') {
     horizSel.value = '1';
-    // Disable options > 1 day
     Array.from(horizSel.options).forEach(o => {
       o.disabled = parseInt(o.value) > 1;
     });
   } else {
-    // Re-enable all options for RF
     Array.from(horizSel.options).forEach(o => { o.disabled = false; });
   }
 
   updateHorizonNote();
   refreshPrediction();
+  // liveDataChange();
 }
 
 function onHorizonChange() {
   updateHorizonNote();
   refreshPrediction();
+  // liveDataChange();
 }
 
 function onStockChange() {
   const symbol = document.getElementById('stock-sel').value;
+  
+  // Clear all displayed data immediately
+  clearDisplayData();
+  
+  // Blur the chart when stock change is triggered
+  blurPredictionChart();
+  
   fetchStockData(symbol);
+  // liveDataChange();
+  
 }
 
 function updateHorizonNote() {
@@ -100,6 +248,30 @@ function updateHorizonNote() {
 // PREDICTION
 let predChart, volChart;
 
+// Get current price (prioritize live data over historical)
+function getCurrentPrice() {
+  if (currentLiveData && currentLiveData.ltp) {
+    return parseFloat(currentLiveData.ltp);
+  }
+  return apiData ? apiData.data[0].close : 0;
+}
+
+// Get today's high (prioritize live data)
+function getTodayHigh() {
+  if (currentLiveData && currentLiveData.high) {
+    return parseFloat(currentLiveData.high);
+  }
+  return apiData ? apiData.data[0].high : 0;
+}
+
+// Get today's low (prioritize live data)
+function getTodayLow() {
+  if (currentLiveData && currentLiveData.low) {
+    return parseFloat(currentLiveData.low);
+  }
+  return apiData ? apiData.data[0].low : 0;
+}
+
 function refreshPrediction() {
   if (!apiData) {
     console.log('Waiting for API data...');
@@ -109,23 +281,25 @@ function refreshPrediction() {
   const days = parseInt(document.getElementById('horizon-sel').value);
   const symbol = document.getElementById('stock-sel').value.toUpperCase();
 
-  // Get current price from latest data
-  const currentPrice = apiData.data[0].close;
+  // Use LIVE current price if available, otherwise fall back to historical
+  const currentPrice = getCurrentPrice();
+  const todayHigh = getTodayHigh();
+  const todayLow = getTodayLow();
+  
+  // Don't proceed if currentPrice is invalid
+  if (currentPrice === 0) {
+    console.log('Invalid current price, waiting for data...');
+    return;
+  }
+  
   const stockNames = {
     'HBL': 'Himalayan Bank Limited',
     'UPPER': 'Upper Tamakoshi Hydropower Limited',
-    // 'NABIL': 'Nabil Bank Limited',
-    // 'NICA': 'NIC Asia Bank Limited',
-    // 'PRVU': 'Prabhu Bank Limited',
-    // 'NLFCL': 'Nepal Finance Limited',
-    // 'SHPC': 'Sanima Hydro Limited',
-    // 'NTC': 'Nepal Telecom',
-    // 'HIDCL': 'Hydroelectricity Investment and Development Company Limited'
   };
 
   const stockName = stockNames[symbol] || symbol;
 
-  // Get historical data (last 30 days for chart) - order from oldest to newest (left to right)
+  // Get historical data (last 30 days for chart) - order from oldest to newest
   const historicalData = apiData.data.slice(0, 30).reverse();
   const histPrices = historicalData.map(d => d.close);
   const histLabels = historicalData.map((d, i) => {
@@ -140,15 +314,14 @@ function refreshPrediction() {
   let changePct = 0;
 
   if (activeModel === 'lstm') {
-    // Use LSTM prediction from API
     const lstmPred = apiData.lstm_pred;
     finalPred = lstmPred.predicted_close;
-    changePct = lstmPred.change_pct;
+    // Recalculate percentage based on LIVE price
+    changePct = ((finalPred - currentPrice) / currentPrice * 100);
     predData = [finalPred];
     upBand = [lstmPred.predicted_high];
     loBand = [lstmPred.predicted_low];
   } else {
-    // Use RF predictions from API (max available days)
     const maxDays = Math.min(days, apiData.rf_pred.length);
     for (let i = 0; i < maxDays; i++) {
       const pred = apiData.rf_pred[i];
@@ -157,13 +330,14 @@ function refreshPrediction() {
       loBand.push(pred.low);
     }
     finalPred = predData[predData.length - 1];
+    // Recalculate percentage based on LIVE price
     changePct = ((finalPred - currentPrice) / currentPrice * 100);
   }
 
   const isUp = finalPred > currentPrice;
   const modelLabel = activeModel === 'lstm' ? 'LSTM' : 'Random Forest';
 
-  // Update top predicted price display with floating points
+  // Update top predicted price display
   const topPredPrice = document.getElementById('top-pred-price');
   const topPredChange = document.getElementById('top-pred-change');
   if (topPredPrice) {
@@ -175,10 +349,8 @@ function refreshPrediction() {
     topPredChange.className = isUp ? 'up' : 'dn';
   }
 
-  // Build chart labels - historical dates and prediction labels
+  // Build chart labels
   const histChartLabels = [...histLabels];
-
-  // Create prediction labels
   const predLabels = [];
   for (let i = 0; i < predData.length; i++) {
     if (i === 0) {
@@ -187,53 +359,53 @@ function refreshPrediction() {
       predLabels.push(`Day ${i + 1}`);
     }
   }
-
-  // Combine labels
   const labels = [...histChartLabels, ...predLabels];
 
   // Build data arrays for chart
   const histFull = [...histPrices];
-
-  // For prediction data, add null for all historical points, then prediction points
   const predFull = [...Array(histPrices.length).fill(null), ...predData];
   const upFull = [...Array(histPrices.length).fill(null), ...upBand];
   const loFull = [...Array(histPrices.length).fill(null), ...loBand];
 
-  // Add point radius for better visibility of prediction dots
-  const pointRadiusArray = [...Array(histPrices.length).fill(0), ...Array(predData.length).fill(4)];
-
-  // Update metric cards using actual data
-  const todayHigh = apiData.data[0].high.toFixed(2);
-  const todayLow = apiData.data[0].low.toFixed(2);
+  // Update metric cards with LIVE data
   const highChg = ((todayHigh - currentPrice) / currentPrice * 100).toFixed(2);
   const lowChg = ((todayLow - currentPrice) / currentPrice * 100).toFixed(2);
-
-  document.getElementById('pm-cur').textContent = `NPR ${currentPrice.toFixed(2).toLocaleString()}`;
-  document.getElementById('pm-stock').textContent = `${symbol} · Today`;
+  
+  const currentPriceElem = document.getElementById('pm-cur');
+  currentPriceElem.textContent = `NPR ${currentPrice.toFixed(2).toLocaleString()}`;
+  
+  // Add live indicator if using live data
+  if (currentLiveData) {
+    currentPriceElem.classList.add('live-data');
+    document.getElementById('pm-stock').innerHTML = `${symbol} · Today`;
+  } else {
+    document.getElementById('pm-stock').innerHTML = `${symbol} · Today`;
+  }
+  
   document.getElementById('pm-high').textContent = `NPR ${todayHigh.toLocaleString()}`;
-  document.getElementById('pm-high-chg').innerHTML = `▲ +${highChg}%`;
+  document.getElementById('pm-high-chg').innerHTML = `▲ ${highChg >= 0 ? '+' : ''}${highChg}%`;
   document.getElementById('pm-low').textContent = `NPR ${todayLow.toLocaleString()}`;
   document.getElementById('pm-low-chg').innerHTML = `▼ ${lowChg}%`;
   document.getElementById('pm-pred').textContent = `NPR ${finalPred.toFixed(2)}`;
   document.getElementById('pm-pred').className = 'stat-val ' + (isUp ? 'up' : 'dn');
   document.getElementById('pm-chg').innerHTML = `${isUp ? '▲' : '▼'} ${isUp ? '+' : ''}${changePct.toFixed(2)}% in ${predData.length} day${predData.length > 1 ? 's' : ''}`;
   document.getElementById('pm-chg').className = 'stat-change ' + (isUp ? 'up' : 'dn');
-  document.getElementById('pred-title').textContent = `${symbol} — ${stockName} · Prediction (${predData.length} Day${predData.length > 1 ? 's' : ''})`;
+  document.getElementById('pred-title').innerHTML = `${symbol} — ${stockName} · Prediction (${predData.length} Day${predData.length > 1 ? 's' : ''})`;
 
-  // Signal box
+  // Signal box with updated percentages
   const sigBox = document.getElementById('signal-box');
   if (changePct > 2) {
     sigBox.className = 'signal-bar buy';
-    sigBox.innerHTML = `<span class="signal-icon">📈</span><div><div class="signal-label">BUY Signal</div><div class="signal-detail">${modelLabel} projects +${changePct.toFixed(2)}% over ${predData.length} day${predData.length > 1 ? 's' : ''}. Educational reference only.</div></div>`;
+    sigBox.innerHTML = `<span class="signal-icon">📈</span><div><div class="signal-label">BUY Signal</div><div class="signal-detail">${modelLabel} projects +${changePct.toFixed(2)}% from current price (NPR ${currentPrice.toFixed(2)}) over ${predData.length} day${predData.length > 1 ? 's' : ''}. Educational reference only.</div></div>`;
   } else if (changePct < -2) {
     sigBox.className = 'signal-bar sell';
-    sigBox.innerHTML = `<span class="signal-icon">📉</span><div><div class="signal-label">SELL Signal</div><div class="signal-detail">${modelLabel} projects ${changePct.toFixed(2)}% over ${predData.length} day${predData.length > 1 ? 's' : ''}. Educational reference only.</div></div>`;
+    sigBox.innerHTML = `<span class="signal-icon">📉</span><div><div class="signal-label">SELL Signal</div><div class="signal-detail">${modelLabel} projects ${changePct.toFixed(2)}% from current price (NPR ${currentPrice.toFixed(2)}) over ${predData.length} day${predData.length > 1 ? 's' : ''}. Educational reference only.</div></div>`;
   } else {
     sigBox.className = 'signal-bar hold';
-    sigBox.innerHTML = `<span class="signal-icon">⏸</span><div><div class="signal-label">HOLD — Neutral</div><div class="signal-detail">Minimal movement projected (${changePct.toFixed(2)}%) over ${predData.length} day${predData.length > 1 ? 's' : ''}. Educational reference only.</div></div>`;
+    sigBox.innerHTML = `<span class="signal-icon">⏸</span><div><div class="signal-label">HOLD — Neutral</div><div class="signal-detail">Minimal movement projected (${changePct.toFixed(2)}%) from current price (NPR ${currentPrice.toFixed(2)}) over ${predData.length} day${predData.length > 1 ? 's' : ''}. Educational reference only.</div></div>`;
   }
 
-  // Prediction chart
+  // Prediction chart (using historical data only)
   if (predChart) predChart.destroy();
   predChart = new Chart(document.getElementById('predChart'), {
     type: 'line',
@@ -317,7 +489,6 @@ function refreshPrediction() {
       elements: {
         point: {
           radius: function (context) {
-            // Show points only for prediction data
             const datasetIndex = context.datasetIndex;
             const dataIndex = context.dataIndex;
             if (datasetIndex === 1 && dataIndex >= histPrices.length) {
@@ -334,14 +505,12 @@ function refreshPrediction() {
   buildPredTable(currentPrice, predData, upBand, loBand);
 }
 
-// PREDICTED PRICES TABLE
 function buildPredTable(currentPrice, predData, upBand, loBand) {
   const tbody = document.getElementById('pred-price-tbody');
   const today = new Date();
   let dayCount = 0;
 
   const rows = predData.map((price, i) => {
-    // Skip weekends
     let date = new Date(today);
     dayCount++;
     date.setDate(today.getDate() + dayCount);
@@ -368,11 +537,9 @@ function buildPredTable(currentPrice, predData, upBand, loBand) {
   tbody.innerHTML = rows.join('');
 }
 
-// VOLUME CHART using actual volume data
 function buildVolChart() {
   if (volChart) volChart.destroy();
 
-  // Use actual volume data from API (last 15 days) - order from oldest to newest
   const volumeData = apiData.data.slice(0, 15).reverse();
   const labels = volumeData.map(d => {
     const date = new Date(d.published_date);
@@ -407,68 +574,70 @@ function buildVolChart() {
   });
 }
 
-// Remove accuracy display from model options
-function removeAccuracyDisplay() {
-  const modelOptions = document.querySelectorAll('.model-option');
-  modelOptions.forEach(option => {
-    // Remove any accuracy text spans if they exist
-    const accuracySpan = option.querySelector('.accuracy');
-    if (accuracySpan) {
-      accuracySpan.remove();
-    }
-  });
-}
-
-// INIT — lock horizon to 1 on load since LSTM is default, then fetch API data for default stock
-(function init() {
-  const horizSel = document.getElementById('horizon-sel');
-  Array.from(horizSel.options).forEach(o => { o.disabled = parseInt(o.value) > 1; });
-  updateHorizonNote();
-
-  // Remove accuracy displays
-  // removeAccuracyDisplay();
-
-  // Get initial stock value and fetch its data
-  const initialStock = document.getElementById('stock-sel').value;
-  fetchStockData(initialStock);
-})();
-
-
+// LIVE DATA UPDATE - Now updates all displays dynamically
 async function liveDataChange() {
   try {
     const symbol = document.getElementById('stock-sel').value;
+    const marketStatusEl = document.querySelector('#market-status');
+    const isMarketOpen = marketStatusEl && marketStatusEl.classList.contains('live-pill');
+    
+    // if (!isMarketOpen) {
+    //   console.log('Market closed - skipping live data update');
+    //   return;
+    // }
+    
     const res = await fetch(`/prediction/live-stock-data/${symbol}/`);
-
-    if (!res.ok) throw new Error(res.status);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
+    currentLiveData = data; // Store the live data
+    
+    // Refresh everything with the new live data
+    if (apiData) {
+      refreshPrediction(); // This will use the live data via getCurrentPrice()
+    }
+    
+    const timestamp = new Date().toLocaleTimeString();
+    const updateIndicator = document.getElementById('live-update-time');
+    if (updateIndicator) {
+      updateIndicator.innerHTML = `📡 Last update: ${timestamp} ${isMarketOpen ? '• LIVE' : ''}`;
+    }
 
-    const currentValue = document.getElementById('pm-cur');
-    const highValue = document.getElementById('pm-high');
-    const lowValue = document.getElementById('pm-low');
-    const highPer = document.getElementById('pm-high-chg');
-    const lowPer = document.getElementById('pm-low-chg');
-
-    const current = parseFloat(data.current);
-    const high = parseFloat(data.high);
-    const low = parseFloat(data.low);
-
-    currentValue.innerText = "NPR " + current.toFixed(2);
-    document.getElementById('pm-stock').textContent = `${symbol} · Today`;
-    highValue.innerText = "NPR " +  high.toFixed(2);
-    lowValue.innerText = "NPR " +  low.toFixed(2);
-
-    const highPercentage = ((high - current) / current) * 100;
-    const lowPercentage = ((low - current) / current) * 100;
-
-    highPer.innerText = "▲ " + "+" + highPercentage.toFixed(2) + "%";
-    lowPer.innerText = "▼ " + lowPercentage.toFixed(2) + "%";
-
-    console.log("live data changed successfully");
+    // console.log("Live data updated at", timestamp);
   } catch (e) {
     console.error("Live data fetch failed:", e);
   }
 }
 
-liveDataChange();
-setInterval(liveDataChange, 60000);
+function startLiveDataUpdates() {
+  if (liveDataInterval) {
+    clearInterval(liveDataInterval);
+  }
+  liveDataInterval = setInterval(liveDataChange, 60000);
+  liveDataChange(); // Initial call
+}
+
+function stopLiveDataUpdates() {
+  if (liveDataInterval) {
+    clearInterval(liveDataInterval);
+    liveDataInterval = null;
+  }
+}
+
+// INIT
+(function init() {
+  const horizSel = document.getElementById('horizon-sel');
+  Array.from(horizSel.options).forEach(o => { o.disabled = parseInt(o.value) > 1; });
+  updateHorizonNote();
+
+  const initialStock = document.getElementById('stock-sel').value;
+  fetchStockData(initialStock);
+  startLiveDataUpdates();
+})();
+
+window.addEventListener('beforeunload', () => {
+  stopLiveDataUpdates();
+  if (marketStatusInterval) {
+    clearInterval(marketStatusInterval);
+  }
+});

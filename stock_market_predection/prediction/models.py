@@ -50,11 +50,11 @@ class Hbl(models.Model):
 
 class UpperLive(models.Model):
     timestamp = models.DateTimeField()
-    current = models.FloatField(null=True, blank=True)
+    ltp = models.FloatField(null=True, blank=True)
     open = models.FloatField()
     high = models.FloatField()
     low = models.FloatField()
-    close = models.FloatField()
+    pr_close = models.FloatField()
     per_change = models.FloatField()
     traded_quantity = models.FloatField()
     traded_amount = models.DecimalField(max_digits=15, decimal_places=2)
@@ -67,17 +67,17 @@ class UpperLive(models.Model):
         verbose_name_plural = "UpperLive"
 
     def __str__(self):
-        return f"{self.timestamp} - {self.close}"
+        return f"{self.timestamp} - {self.pr_close}"
     
 
 
 class HblLive(models.Model):
     timestamp = models.DateTimeField()
-    current = models.FloatField(null=True, blank=True)
+    ltp = models.FloatField(null=True, blank=True)
     open = models.FloatField()
     high = models.FloatField()
     low = models.FloatField()
-    close = models.FloatField()
+    pr_close = models.FloatField()
     per_change = models.FloatField()
     traded_quantity = models.FloatField()
     traded_amount = models.DecimalField(max_digits=15, decimal_places=2)
@@ -90,4 +90,4 @@ class HblLive(models.Model):
         verbose_name_plural = "HblLive"
 
     def __str__(self):
-        return f"{self.timestamp} - {self.close}"
+        return f"{self.timestamp} - {self.pr_close}"
