@@ -1,11 +1,36 @@
 from django.utils import timezone
 from nepse_data_api import Nepse
 from datetime import time
-from .models import MostActiveStocks, NepseIndexData, NepseIndex, Gainer, Loser, Sector, MarketBreadth
+from .models import MostActiveStocks, NepseIndexData, NepseIndex, Gainer, Loser, Sector, MarketBreadth, StockData
 from django.db import transaction
 from prediction.models import Upper, Hbl, UpperLive, HblLive
 import logging
 logger = logging.getLogger(__name__)
+
+
+
+nepse_stocks = [
+    "RIDI",   # Ridi Power Company – high turnover & volume leader
+    "KBL",    # Kumari Bank Ltd – very high share count
+    "API",    # API Power Company – heavy volume
+    "NHPC",   # National Hydro Power Co – major hydropower mover
+    "NRN",    # NRN Infrastructure & Dev – big turnover
+    "SYPNL",  # SY Panel Nepal Ltd – strong volume
+    "HIDCL",  # Hydroelectricity Investment & Dev Co – high volume
+    "SMHL",   # Saptakoshi Hydropower Ltd – popular hydro stock
+    "NICA",   # NIC Asia Bank Ltd – big banking stock
+    "EBL",    # Everest Bank Ltd – frequently traded bank
+    "NABIL",  # Nabil Bank Ltd – top bank name
+    "SBL",    # Standard Bank Ltd – frequent name in watchlists
+    "SHIVM",  # Shivam Cements – active manufacturing stock
+    "SOHL",   # Solu Hydropower – seen in volume leaders
+    "AKJCL",  # Ankhu Khola Jalvidhyut Co – big turnover presence
+    "MFIL",   # Manjushree Finance Ltd – often active finance
+    "NRIC",   # Nepal Reinsurance Co – active insurance name
+    "BPCL",   # Butwal Power Co – noted in turnover lists
+    "SHPC",   # Sanima Mai Hydropower Ltd – notable turnover
+    "RADHI"   # Radhi Bidyut Co – strong turnover presence
+]
 
 
 def store_data():
@@ -225,6 +250,15 @@ def store_data():
                             traded_amount=stock['totalTradeValue'],
                             status = -1 if per_change < 0 else (1 if per_change > 0 else 0)
                             )
+
+                    if stock['symbol'] in nepse_stocks:
+                        StockData.objects.create(
+                            timestamp= now,
+                            symbol= stock['symbol'],
+                            ltp= stock['lastTradedPrice'],
+                            change_percent= stock['percentageChange']
+                        )
+                    
                 logger.info("Live stock stock summary stored...")
 
             # Store end-of-day summary (15:00–15:01)

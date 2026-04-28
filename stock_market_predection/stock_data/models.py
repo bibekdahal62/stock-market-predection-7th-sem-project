@@ -162,6 +162,23 @@ class MarketBreadth(models.Model):
 
     def __str__(self):
         return f"Breadth @ {self.timestamp}"
+    
+
+class StockData(models.Model):
+    timestamp = models.DateTimeField()
+    symbol = models.CharField(max_length=20)
+    ltp = models.DecimalField(max_digits=10, decimal_places=2)
+    change_percent = models.DecimalField(max_digits=6, decimal_places=2)
+    up = models.BooleanField()
+
+
+    def save(self, *args, **kwargs):
+        # Automatically set `up` based on change_percent
+        self.up = self.change_percent > 0
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.symbol} | {self.ltp} | {self.change_percent}%"
 
 
 

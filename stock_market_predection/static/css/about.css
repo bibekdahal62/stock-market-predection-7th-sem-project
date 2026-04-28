@@ -47,6 +47,61 @@ body {
     line-height: 1.7;
 }
 
+
+/* ── TICKER ── */
+.topbar {
+    background: var(--blue);
+    color: #fff;
+    font-size: 12px;
+    font-family: var(--mono);
+    padding: 5px 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.ticker-wrap {
+    display: flex;
+    overflow: hidden;
+    width: 100%;
+}
+
+.ticker {
+    display: flex;
+    gap: 48px;
+    animation: scroll-left 40s linear infinite;
+    flex-shrink: 0;
+}
+
+.ticker-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.ticker-sym {
+    color: #aac4e8;
+}
+
+.ticker-up {
+    color: #5ddc9a;
+}
+
+.ticker-dn {
+    color: #f38b7e;
+}
+
+@keyframes scroll-left {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+
+
 /* ── LAYOUT ── */
 .about-main {
     width: 100%;

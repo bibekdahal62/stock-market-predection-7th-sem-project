@@ -2,8 +2,8 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from nepse_data_api import Nepse
-from stock_data.models import NepseIndex, NepseIndexData, MostActiveStocks, Gainer, Loser, Sector, MarketBreadth
-from .serializers import NepseIndexSerializer, NepseIndexDataSerializer, MostActiveStocksSerializer, GainerSerializer, LoserSerializer, SectorSerializer, MarketBreadthSerializer
+from stock_data.models import NepseIndex, NepseIndexData, MostActiveStocks, Gainer, Loser, Sector, MarketBreadth, StockData
+from .serializers import NepseIndexSerializer, NepseIndexDataSerializer, MostActiveStocksSerializer, GainerSerializer, LoserSerializer, SectorSerializer, MarketBreadthSerializer, StockDataSerializer
 from datetime import datetime, time, date
 # from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
@@ -205,6 +205,21 @@ def index_chart_latest(request):
             'market_status': None,
             'data': None
         })
+
+
+
+from django.db.models import Max
+
+@api_view(['GET'])
+def latest_batch(request):
+    latest_ts = StockData.objects.aggregate(
+        max_ts=Max('timestamp')
+    )['max_ts']
+
+    qs = StockData.objects.filter(timestamp=latest_ts).order_by('symbol')
+
+    serializer = StockDataSerializer(qs, many=True)
+    return Response(serializer.data)
 
 
 

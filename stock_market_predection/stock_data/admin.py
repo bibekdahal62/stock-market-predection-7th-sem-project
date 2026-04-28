@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UPPER, NepseIndex, NepseIndexData, MostActiveStocks, Gainer, Loser, Sector, MarketBreadth
+from .models import UPPER, NepseIndex, NepseIndexData, MostActiveStocks, Gainer, Loser, Sector, MarketBreadth, StockData
 
 # Register your models here.
 
@@ -101,6 +101,16 @@ class MarketBreadthAdmin(admin.ModelAdmin):
 
 
 
+class StockDataAdmin(admin.ModelAdmin):
+    list_display = (
+        'timestamp',
+        'symbol',
+        'ltp',
+        'change_percent',
+        'up'
+    )
+
+
 
 admin.site.register(UPPER, UPPERAdmin)
 admin.site.register(NepseIndex, NepseIndexAdmin)
@@ -110,3 +120,4 @@ admin.site.register(Gainer, GainerAdmin)
 admin.site.register(Loser, LoserAdmin)
 admin.site.register(Sector, SectorAdmin)
 admin.site.register(MarketBreadth, MarketBreadthAdmin)
+admin.site.register(StockData, StockDataAdmin)

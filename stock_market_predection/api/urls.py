@@ -14,5 +14,6 @@ urlpatterns = [
     # path('fetch-nepse/', views.fetch_and_store_nepse, name='fetch-nepse'),
     path('stock-data/', views.stock_data, name='stock_data'),
     path('market-status/', views.market_status, name='market-status'),
+    path('ticker-data/', views.latest_batch, name='ticker_data'),
 
 ]
