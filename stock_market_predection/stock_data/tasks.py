@@ -37,7 +37,7 @@ def store_data():
     now = timezone.localtime()
 
     # ✅ Only run during market days/times
-    if not (now.weekday() < 5 and time(11, 0) <= now.time() <= time(15, 2)):
+    if not (now.weekday() < 5 and time(11, 0) <= now.time() <= time(15, 4)):
         logger.info("Outside market time. Skipping data store.")
         return
 
@@ -129,7 +129,7 @@ def store_data():
         with transaction.atomic():
 
             # Store Most Active Stocks (11:00–15:00)
-            if time(11, 0) <= now.time() <= time(15, 0):
+            if time(11, 0) <= now.time() <= time(15, 1):
                 logger.info("Market is active. Storing data...")
                 for stock in top_10_active:
                     MostActiveStocks.objects.create(
@@ -262,7 +262,7 @@ def store_data():
                 logger.info("Live stock stock summary stored...")
 
             # Store end-of-day summary (15:00–15:01)
-            if time(15, 0) <= now.time() <= time(15, 1):
+            if time(15, 2) <= now.time() <= time(15, 3):
                 NepseIndex.objects.create(
                     date=now.date(),
                     close=nepse_index,
