@@ -99,13 +99,13 @@ async function updateData() {
 
     //Top Gainers
     document.getElementById('gainers-body').innerHTML = data.gainers.map(d =>
-        `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</td><td><span class="badge badge-up">${d.point_change}</span></td><td><span class="badge badge-up">${d.percentage_change}</span></td></tr>`
+        `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</div></td><td><span class="badge badge-up">${d.point_change}</span></td><td><span class="badge badge-up">${d.percentage_change}</span></td></tr>`
     ).join('');
 
 
     //Top Loosers
     document.getElementById('losers-body').innerHTML = data.loosers.map(d =>
-        `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</td><td><span class="badge badge-dn">${d.point_change}</span></td><td><span class="badge badge-dn">${d.percentage_change}</span></td></tr>`
+        `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</div></td><td><span class="badge badge-dn">${d.point_change}</span></td><td><span class="badge badge-dn">${d.percentage_change}</span></tr>`
     ).join('');
 
 
@@ -145,14 +145,14 @@ async function updateData() {
                 <td>
                     <div class="sym">${d.symbol}</div>
                     <div class="co-name">${d.name}</div>
-                </td>
-                <td>${ltp.toFixed(2)}</td>
+                </div>
+                <td>${ltp.toFixed(2)}</div>
                 <td>
                     <span class="badge ${pct > 0 ? 'badge-up' : 'badge-dn'}">
                         ${pct.toFixed(2)}%
                     </span>
-                </td>
-                <td>${qty.toLocaleString()}</td>
+                </div>
+                <td>${qty.toLocaleString()}</div>
                 </tr>`;
         }).join('');
     // console.log('Data Updated Successfilly....');
@@ -206,21 +206,31 @@ async function fetchNepseData() {
         currentMarketStatus = dailyDataResponse.market_status;
         const dailyData = dailyDataResponse.data;
 
+        // Ensure dailyData is an array
+        const intradayData = Array.isArray(dailyData) ? dailyData : [];
+
         // Fetch historical daily closing data for 1W, 1M, 3M views
         const historicalResponse = await fetch('/api/index-chart/');
 
         if (!historicalResponse.ok) throw new Error('API request failed');
 
         const historicalData_raw = await historicalResponse.json();
+        
+        // Ensure historicalData_raw is an array
+        const historicalDataArray = Array.isArray(historicalData_raw) ? historicalData_raw : [];
 
         return {
-            intraday: dailyData, // Intraday data (any interval: 1min, 5min, 10min, etc.)
-            historical: historicalData_raw, // Daily closing data
+            intraday: intradayData,
+            historical: historicalDataArray,
             marketStatus: currentMarketStatus
         };
     } catch (error) {
         console.error('Error fetching NEPSE data:', error);
-        return { intraday: [], historical: [], marketStatus: "CLOSE" };
+        return { 
+            intraday: [], 
+            historical: [], 
+            marketStatus: "CLOSE" 
+        };
     }
 }
 
@@ -272,7 +282,7 @@ async function refreshOneDayChart() {
         
         // Update market status and data
         currentMarketStatus = dailyDataResponse.market_status;
-        allNepseData = dailyDataResponse.data;
+        allNepseData = Array.isArray(dailyDataResponse.data) ? dailyDataResponse.data : [];
         
         // Rebuild only the 1D chart
         await buildIndexChart('1D');
@@ -344,6 +354,16 @@ function detectTimeInterval(data) {
 
 function filterDataByTimeframe(data, tf) {
     if (tf === '1D') {
+        // Check if intraday data exists and is an array
+        if (!data.intraday || !Array.isArray(data.intraday)) {
+            console.error('Intraday data is not available or not an array:', data.intraday);
+            return {
+                data: [],
+                interval: 10,
+                marketStatus: data.marketStatus || "CLOSE"
+            };
+        }
+        
         // Return intraday data sorted chronologically
         const intradayData = [...data.intraday].reverse();
 
@@ -365,6 +385,16 @@ function filterDataByTimeframe(data, tf) {
         };
     } else {
         // For 1W, 1M, 3M use historical daily closing data
+        // Add validation for historical data too
+        if (!data.historical || !Array.isArray(data.historical)) {
+            console.error('Historical data is not available or not an array:', data.historical);
+            return {
+                data: [],
+                interval: 1440,
+                marketStatus: "CLOSE"
+            };
+        }
+        
         const points = {
             '1W': 7,      // Last 7 days
             '1M': 30,     // Last 30 days
@@ -918,10 +948,3 @@ async function fetchNepse() {
 // setInterval(() => {
 //     fetchNepse();
 // }, 60000);
-
-
-
-
-
-
-
