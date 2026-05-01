@@ -1,0 +1,159 @@
+/* ═══════════════════════════════════════════════════════════
+   NEPSE Predict — Ticker Stylesheet  (style_ticker.css)
+   Place this file at:  static/css/style_ticker.css
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── TICKER BAR ── */
+.topbar {
+  background: var(--accent, #1e3a6e);
+  color: #ffffff;
+  font-size: 12px;
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  padding: 6px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  z-index: 10;
+}
+
+/* Fade edges for smooth feel */
+.topbar::before,
+.topbar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 48px;
+  z-index: 2;
+  pointer-events: none;
+}
+.topbar::before {
+  left: 0;
+  background: linear-gradient(to right, var(--accent, #1e3a6e), transparent);
+}
+.topbar::after {
+  right: 0;
+  background: linear-gradient(to left, var(--accent, #1e3a6e), transparent);
+}
+
+/* ── TICKER WRAPPER & TRACK ── */
+.ticker-wrap {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+}
+
+.ticker {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  animation: ticker-scroll 50s linear infinite;
+  flex-shrink: 0;
+  will-change: transform;
+}
+
+.ticker:hover {
+  animation-play-state: paused;
+}
+
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ── TICKER ITEMS ── */
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 20px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  line-height: 1;
+}
+
+.ticker-item:last-child {
+  border-right: none;
+}
+
+/* Symbol name */
+.ticker-sym {
+  color: #93c5fd;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+/* Price value */
+.ticker-price {
+  color: #f1f5f9;
+  font-size: 11px;
+}
+
+/* Up change */
+.ticker-up {
+  color: #4ade80;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Down change */
+.ticker-dn {
+  color: #f87171;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Separator dot between items (optional span inside ticker-item) */
+.ticker-dot {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  margin: 0 2px;
+  vertical-align: middle;
+}
+
+
+/* ════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════ */
+
+/* ── Tablet ≤ 900px — slightly smaller text ── */
+@media (max-width: 900px) {
+  .topbar { font-size: 11px; padding: 5px 0; }
+  .ticker-item { padding: 0 14px; gap: 5px; }
+  .ticker-sym  { font-size: 10px; }
+  .ticker-up,
+  .ticker-dn,
+  .ticker-price { font-size: 10px; }
+  .topbar::before,
+  .topbar::after { width: 32px; }
+}
+
+/* ── Mobile ≤ 640px — compact ── */
+@media (max-width: 640px) {
+  .topbar { padding: 5px 0; }
+  .ticker { animation-duration: 35s; }
+  .ticker-item  { padding: 0 10px; gap: 4px; }
+  .ticker-sym   { font-size: 10px; }
+  .ticker-up,
+  .ticker-dn,
+  .ticker-price { font-size: 10px; }
+  .topbar::before,
+  .topbar::after { width: 20px; }
+}
+
+/* ── Small phone ≤ 420px — minimal ── */
+@media (max-width: 420px) {
+  .topbar { padding: 4px 0; }
+  .ticker { animation-duration: 28s; }
+  .ticker-item  { padding: 0 8px; gap: 3px; }
+  .ticker-sym   { font-size: 9px; }
+  .ticker-up,
+  .ticker-dn,
+  .ticker-price { font-size: 9px; }
+  .topbar::before,
+  .topbar::after { width: 12px; }
+}

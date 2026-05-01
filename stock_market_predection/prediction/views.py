@@ -128,8 +128,8 @@ def live_stock_data(request, stock):
 
 
     if stock in live_stock_models:
-        data = live_stock_models[stock].objects.order_by('-timestamp').first()
+        data = live_stock_models[stock].objects.order_by('-timestamp')[:2]
         sd = live_models_serializer[stock]
-        serializer = sd(data)
+        serializer = sd(data, many=True)
 
     return Response(serializer.data)

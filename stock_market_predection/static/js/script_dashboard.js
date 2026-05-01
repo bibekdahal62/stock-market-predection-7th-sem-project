@@ -182,41 +182,37 @@ setInterval(() => {
 }, 30000);
 
 
-//BELOW IS THE JS FOR THE CHART
 
 
-// INDEX CHART
+
+
+
+
+
+// //BELOW IS THE JS FOR THE CHART
+
+
+// BELOW IS THE JS FOR THE CHART
 // INDEX CHART
 let indexChart;
-let allNepseData = []; // Store daily intraday data
-let historicalData = []; // Store historical daily closing data
-let currentMarketStatus = "CLOSE"; // Store market status (renamed to avoid conflict)
-let refreshInterval = null; // Store refresh interval reference
+let allNepseData = [];
+let historicalData = [];
+let currentMarketStatus = "CLOSE";
+let chartRefreshInterval = null;
 
 async function fetchNepseData() {
     try {
-        // Fetch daily intraday data for 1D view
         const dailyResponse = await fetch('/api/latest-chart/');
-
         if (!dailyResponse.ok) throw new Error('API request failed');
-
         const dailyDataResponse = await dailyResponse.json();
-
-        // Extract market status and data from the response
+        
         currentMarketStatus = dailyDataResponse.market_status;
         const dailyData = dailyDataResponse.data;
-
-        // Ensure dailyData is an array
         const intradayData = Array.isArray(dailyData) ? dailyData : [];
 
-        // Fetch historical daily closing data for 1W, 1M, 3M views
         const historicalResponse = await fetch('/api/index-chart/');
-
         if (!historicalResponse.ok) throw new Error('API request failed');
-
         const historicalData_raw = await historicalResponse.json();
-        
-        // Ensure historicalData_raw is an array
         const historicalDataArray = Array.isArray(historicalData_raw) ? historicalData_raw : [];
 
         return {
@@ -226,123 +222,93 @@ async function fetchNepseData() {
         };
     } catch (error) {
         console.error('Error fetching NEPSE data:', error);
-        return { 
-            intraday: [], 
-            historical: [], 
-            marketStatus: "CLOSE" 
-        };
+        return { intraday: [], historical: [], marketStatus: "CLOSE" };
     }
 }
 
-// Function to check if market is open (Monday to Friday, 11:00 to 15:00)
 function isMarketOpen() {
     const now = new Date();
-    const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const dayOfWeek = now.getDay();
     const hours = now.getHours();
     const minutes = now.getMinutes();
     const currentTimeInMinutes = hours * 60 + minutes;
     
-    const marketOpenTime = 11 * 60; // 11:00 AM
-    const marketCloseTime = 15 * 60; // 3:00 PM
+    const marketOpenTime = 11 * 60;
+    const marketCloseTime = 15 * 60;
     
-    // Check if it's weekday (Monday to Friday) and within market hours
     const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
     const isWithinMarketHours = currentTimeInMinutes >= marketOpenTime && currentTimeInMinutes <= marketCloseTime;
     
     return isWeekday && isWithinMarketHours;
 }
 
-// Function to check if today is weekend (Saturday or Sunday)
 function isWeekend() {
     const now = new Date();
     const dayOfWeek = now.getDay();
-    return dayOfWeek === 0 || dayOfWeek === 6; // 0 = Sunday, 6 = Saturday
+    return dayOfWeek === 0 || dayOfWeek === 6;
 }
 
-// Function to refresh the 1D chart only
-async function refreshOneDayChart() {
-    console.log('Refreshing 1D chart...', new Date().toLocaleTimeString());
-    
-    // Show loading state on chart
-    const canvas = document.getElementById('indexChart');
-    if (canvas) {
-        canvas.style.opacity = '0.5';
-    }
-    
-    try {
-        // Clear only intraday data (1D view data)
-        allNepseData = [];
-        
-        // Fetch fresh intraday data
-        const dailyResponse = await fetch('/api/latest-chart/');
-        
-        if (!dailyResponse.ok) throw new Error('API request failed');
-        
-        const dailyDataResponse = await dailyResponse.json();
-        
-        // Update market status and data
-        currentMarketStatus = dailyDataResponse.market_status;
-        allNepseData = Array.isArray(dailyDataResponse.data) ? dailyDataResponse.data : [];
-        
-        // Rebuild only the 1D chart
-        await buildIndexChart('1D');
-        
-        console.log('1D chart refreshed successfully');
-    } catch (error) {
-        console.error('Error refreshing 1D chart:', error);
-    } finally {
-        if (canvas) {
-            canvas.style.opacity = '1';
-        }
-    }
-}
-
-// Function to start/stop refresh based on market conditions
-function manageRefreshInterval() {
-    // Clear existing interval if any
-    if (refreshInterval) {
-        clearInterval(refreshInterval);
-        refreshInterval = null;
+// Function to manage chart refresh interval
+function manageChartRefreshInterval() {
+    // Clear existing interval
+    if (chartRefreshInterval) {
+        clearInterval(chartRefreshInterval);
+        chartRefreshInterval = null;
     }
     
     // Check if market is open
     if (isMarketOpen()) {
-        console.log('Market is OPEN - Starting 60.5 second refresh interval');
-        // Start refresh interval every 60.5 seconds (60500 milliseconds)
-        refreshInterval = setInterval(() => {
-            // Check again if market is still open before refreshing
+        console.log('Chart refresh started - Updating every 60.5 seconds');
+        chartRefreshInterval = setInterval(() => {
             if (isMarketOpen()) {
                 refreshOneDayChart();
             } else {
-                // Market closed, stop refreshing
-                console.log('Market closed - Stopping refresh');
-                if (refreshInterval) {
-                    clearInterval(refreshInterval);
-                    refreshInterval = null;
+                // Stop if market closed
+                if (chartRefreshInterval) {
+                    clearInterval(chartRefreshInterval);
+                    chartRefreshInterval = null;
                 }
             }
-        }, 60500); // 60.5 seconds = 60500 milliseconds
+        }, 60500); // 60.5 seconds
     } else if (isWeekend()) {
-        console.log('Weekend detected - No refresh (Market closed on weekends)');
+        console.log('Weekend detected - No chart refresh');
     } else {
-        console.log('Market is CLOSED (outside market hours) - No refresh');
+        console.log('Market closed - No chart refresh');
     }
 }
 
-// Function to detect the time interval between data points
-function detectTimeInterval(data) {
-    if (data.length < 2) return 10; // Default to 10 minutes if not enough data
+async function refreshOneDayChart() {
+    console.log('Refreshing 1D chart...', new Date().toLocaleTimeString());
+    
+    const canvas = document.getElementById('indexChart');
+    if (canvas) canvas.style.opacity = '0.5';
+    
+    try {
+        allNepseData = [];
+        
+        const dailyResponse = await fetch('/api/latest-chart/');
+        if (!dailyResponse.ok) throw new Error('API request failed');
+        
+        const dailyDataResponse = await dailyResponse.json();
+        currentMarketStatus = dailyDataResponse.market_status;
+        allNepseData = Array.isArray(dailyDataResponse.data) ? dailyDataResponse.data : [];
+        
+        await buildIndexChart('1D');
+        console.log('1D chart refreshed successfully');
+    } catch (error) {
+        console.error('Error refreshing 1D chart:', error);
+    } finally {
+        if (canvas) canvas.style.opacity = '1';
+    }
+}
 
-    // Get first two timestamps to calculate interval
+function detectTimeInterval(data) {
+    if (data.length < 2) return 10;
     const timestamp1 = new Date(data[0].timestamp);
     const timestamp2 = new Date(data[1].timestamp);
-
-    // Calculate difference in minutes
     const diffMinutes = Math.abs(timestamp2 - timestamp1) / (1000 * 60);
-
     console.log(`Detected time interval: ${diffMinutes} minutes`);
-
-    // Round to nearest common interval
+    
     if (diffMinutes <= 1.5) return 1;
     if (diffMinutes <= 3) return 2;
     if (diffMinutes <= 5.5) return 5;
@@ -354,82 +320,46 @@ function detectTimeInterval(data) {
 
 function filterDataByTimeframe(data, tf) {
     if (tf === '1D') {
-        // Check if intraday data exists and is an array
         if (!data.intraday || !Array.isArray(data.intraday)) {
-            console.error('Intraday data is not available or not an array:', data.intraday);
-            return {
-                data: [],
-                interval: 10,
-                marketStatus: data.marketStatus || "CLOSE"
-            };
+            return { data: [], interval: 10, marketStatus: data.marketStatus || "CLOSE" };
         }
         
-        // Return intraday data sorted chronologically
         const intradayData = [...data.intraday].reverse();
-
-        // Detect the time interval
         const interval = detectTimeInterval(intradayData);
-
-        // Log data info
+        
         if (intradayData.length > 0) {
             const firstTimestamp = new Date(intradayData[0].timestamp);
             const lastTimestamp = new Date(intradayData[intradayData.length - 1].timestamp);
             console.log(`1D View: ${intradayData.length} data points at ${interval}-minute intervals`);
             console.log(`Time range: ${firstTimestamp.toLocaleTimeString()} to ${lastTimestamp.toLocaleTimeString()}`);
         }
-
-        return {
-            data: intradayData,
-            interval: interval,
-            marketStatus: data.marketStatus
-        };
+        
+        return { data: intradayData, interval: interval, marketStatus: data.marketStatus };
     } else {
-        // For 1W, 1M, 3M use historical daily closing data
-        // Add validation for historical data too
         if (!data.historical || !Array.isArray(data.historical)) {
-            console.error('Historical data is not available or not an array:', data.historical);
-            return {
-                data: [],
-                interval: 1440,
-                marketStatus: "CLOSE"
-            };
+            return { data: [], interval: 1440, marketStatus: "CLOSE" };
         }
         
-        const points = {
-            '1W': 7,      // Last 7 days
-            '1M': 30,     // Last 30 days
-            '3M': 90      // Last 90 days
-        }[tf] || 48;
-
-        return {
-            data: data.historical.slice(0, points).reverse(),
-            interval: 1440, // 24 hours in minutes for daily data
-            marketStatus: "CLOSE"
-        };
+        const points = { '1W': 7, '1M': 30, '3M': 90 }[tf] || 48;
+        return { data: data.historical.slice(0, points).reverse(), interval: 1440, marketStatus: "CLOSE" };
     }
 }
 
 function formatLabels(data, tf, interval) {
     if (tf === '1D') {
-        // Format timestamps based on available data points
         return data.map(item => {
             const timestamp = new Date(item.timestamp);
             let hours = timestamp.getHours();
             const minutes = timestamp.getMinutes();
             const period = hours >= 12 ? 'PM' : 'AM';
-
-            // Convert to 12-hour format
             hours = hours % 12;
             hours = hours ? hours : 12;
-
             const formattedMinutes = minutes.toString().padStart(2, '0');
-
-            // Show seconds if interval is 1 minute or less
+            
             if (interval <= 1) {
                 const seconds = timestamp.getSeconds().toString().padStart(2, '0');
                 return `${hours}:${formattedMinutes}:${seconds} ${period}`;
             }
-
             return `${hours}:${formattedMinutes} ${period}`;
         });
     } else if (tf === '1W') {
@@ -437,28 +367,18 @@ function formatLabels(data, tf, interval) {
             const date = new Date(item.date);
             return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
         });
-    } else if (tf === '1M' || tf === '3M') {
+    } else {
         return data.map(item => {
             const date = new Date(item.date);
             return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
         });
     }
-
-    return data.map(item => {
-        const date = new Date(item.date);
-        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    });
 }
 
 async function buildIndexChart(tf) {
-    // Show loading state
     const canvas = document.getElementById('indexChart');
-    const ctx = canvas?.getContext('2d');
-    if (ctx) {
-        canvas.style.opacity = '0.7';
-    }
+    if (canvas) canvas.style.opacity = '0.7';
 
-    // Fetch data if not already loaded
     if (allNepseData.length === 0 || historicalData.length === 0) {
         const fetchedData = await fetchNepseData();
         allNepseData = fetchedData.intraday;
@@ -466,18 +386,11 @@ async function buildIndexChart(tf) {
         currentMarketStatus = fetchedData.marketStatus;
     }
 
-    const dataForView = {
-        intraday: allNepseData,
-        historical: historicalData,
-        marketStatus: currentMarketStatus
-    };
-
-    // Filter data based on timeframe
+    const dataForView = { intraday: allNepseData, historical: historicalData, marketStatus: currentMarketStatus };
     const { data: filteredData, interval, marketStatus: marketStatusForView } = filterDataByTimeframe(dataForView, tf);
 
     if (filteredData.length === 0) {
         console.error('No data available for timeframe:', tf);
-        // Show "No Data" message on chart
         if (indexChart) indexChart.destroy();
         const canvas = document.getElementById('indexChart');
         const ctx = canvas?.getContext('2d');
@@ -488,13 +401,11 @@ async function buildIndexChart(tf) {
             ctx.textAlign = 'center';
             ctx.fillText('No data available', canvas.width / 2, canvas.height / 2);
         }
-        canvas.style.opacity = '1';
+        if (canvas) canvas.style.opacity = '1';
         return;
     }
 
-    // Extract values based on data type
     let closeValues, labels;
-
     if (tf === '1D') {
         closeValues = filteredData.map(item => parseFloat(item.nepse_index));
         labels = formatLabels(filteredData, tf, interval);
@@ -503,11 +414,8 @@ async function buildIndexChart(tf) {
         labels = formatLabels(filteredData, tf, interval);
     }
 
-    // Calculate min and max for better y-axis
     let minValue, maxValue, padding;
-
     if (closeValues.length === 1) {
-        // If only one data point, add padding
         minValue = closeValues[0] - 20;
         maxValue = closeValues[0] + 20;
         padding = 0;
@@ -517,158 +425,126 @@ async function buildIndexChart(tf) {
         padding = (maxValue - minValue) * 0.1;
     }
 
-    // Destroy existing chart if it exists
-    if (indexChart) {
-        indexChart.destroy();
-    }
+    if (indexChart) indexChart.destroy();
 
-    // Configure x-axis based on data points count and interval
     let xAxisConfig = {
         display: true,
-        grid: {
-            display: tf === '1D' && filteredData.length > 5,
-            color: 'rgba(154,162,174,0.1)'
-        },
-        ticks: {
-            display: true,
-            color: '#9aa2ae',
-            font: {
-                size: 6,
-                family: 'IBM Plex Mono'
-            }
-        }
+        grid: { display: tf === '1D' && filteredData.length > 5, color: 'rgba(154,162,174,0.1)' },
+        ticks: { display: true, color: '#9aa2ae', font: { size: 12, family: 'IBM Plex Mono' } }
     };
 
-    // Dynamic x-axis configuration based on available data points
     const dataPointCount = filteredData.length;
 
     if (tf === '1D') {
-        // Calculate expected max points based on interval
-        const marketHours = 4; // 11 AM to 3 PM = 4 hours
+        const marketHours = 4;
         const expectedMaxPoints = Math.floor((marketHours * 60) / interval) + 1;
-
-        // Get last update time
+        
         let lastUpdateText = '';
         if (dataPointCount > 0) {
             const lastTimestamp = new Date(filteredData[filteredData.length - 1].timestamp);
             lastUpdateText = ` | Last: ${lastTimestamp.toLocaleTimeString()}`;
         }
-
-        // Add auto-refresh indicator when market is open
+        
         let autoRefreshText = '';
         if (marketStatusForView === "OPEN" && isMarketOpen()) {
             autoRefreshText = ' | 🔄 Auto-refresh: 60.5s';
         }
-
-        // Set title based on data completeness and market status
-        const percentageComplete = (dataPointCount / expectedMaxPoints * 100).toFixed(0);
-
-        // Add market status indicator to title
+        
         const marketStatusIcon = marketStatusForView === "OPEN" ? "🟢" : "🔴";
         const marketStatusText = marketStatusForView === "OPEN" ? "MARKET OPEN" : "MARKET CLOSED";
-
-        if (marketStatusForView === "OPEN") {
+        
+        // SHOW 8 TIMESTAMPS TOTAL (FIRST, LAST, AND 6 EVENLY SPACED IN BETWEEN)
+        if (dataPointCount >= 8) {
+            const totalLabels = labels.length;
+            // We want 8 ticks total: first, last, and 6 evenly spaced in between
+            const targetTicks = 8;
+            const step = (totalLabels - 1) / (targetTicks - 1);
+            
+            // Create array of indices to show
+            const indicesToShow = [];
+            for (let i = 0; i < targetTicks; i++) {
+                const index = Math.round(i * step);
+                if (!indicesToShow.includes(index) && index < totalLabels) {
+                    indicesToShow.push(index);
+                }
+            }
+            
+            // Ensure last index is included
+            if (!indicesToShow.includes(totalLabels - 1)) {
+                indicesToShow[indicesToShow.length - 1] = totalLabels - 1;
+            }
+            
+            // Create new labels array with empty strings for hidden labels
+            const newLabels = [];
+            for (let i = 0; i < totalLabels; i++) {
+                if (indicesToShow.includes(i)) {
+                    newLabels.push(labels[i]);
+                } else {
+                    newLabels.push(''); // Empty string hides the tick
+                }
+            }
+            
+            // Replace the labels array
+            labels.length = 0;
+            labels.push(...newLabels);
+            
+            // Configure x-axis ticks
+            xAxisConfig.ticks.maxRotation = 0;
+            xAxisConfig.ticks.minRotation = 0;
+            xAxisConfig.ticks.autoSkip = false;
+            xAxisConfig.ticks.maxTicksLimit = targetTicks;
+            
+        } else if (dataPointCount > 5) {
+            // Show all data points but ensure no overlapping
             xAxisConfig.ticks.maxRotation = 30;
             xAxisConfig.ticks.minRotation = 30;
-            xAxisConfig.ticks.autoSkip = false;
-            xAxisConfig.title = {
-                display: true,
-                text: `${marketStatusIcon} ${marketStatusText}${autoRefreshText}${lastUpdateText}`,
-                color: '#2ecc71',
-                font: { size: 10, family: 'IBM Plex Mono', weight: 'bold' },
-                padding: { top: 10 }
-            };
+            xAxisConfig.ticks.autoSkip = true;
+            xAxisConfig.ticks.maxTicksLimit = dataPointCount;
         } else {
-            if (dataPointCount <= 5) {
-                xAxisConfig.ticks.maxRotation = 0;
-                xAxisConfig.ticks.minRotation = 0;
-                xAxisConfig.ticks.autoSkip = false;
-                xAxisConfig.title = {
-                    display: true,
-                    text: `${marketStatusIcon} ${marketStatusText}${lastUpdateText}`,
-                    color: '#e74c3c',
-                    font: { size: 10, family: 'IBM Plex Mono' },
-                    padding: { top: 10 }
-                };
-            } else if (dataPointCount < expectedMaxPoints) {
-                xAxisConfig.ticks.maxRotation = 30;
-                xAxisConfig.ticks.minRotation = 30;
-                xAxisConfig.ticks.autoSkip = false;
-                xAxisConfig.title = {
-                    display: true,
-                    text: `${marketStatusIcon} ${marketStatusText}${lastUpdateText}`,
-                    color: '#f39c12',
-                    font: { size: 10, family: 'IBM Plex Mono' },
-                    padding: { top: 10 }
-                };
-            } else {
-                xAxisConfig.ticks.maxRotation = 45;
-                xAxisConfig.ticks.minRotation = 45;
-                xAxisConfig.ticks.autoSkip = true;
-                xAxisConfig.ticks.maxTicksLimit = 8;
-                xAxisConfig.title = {
-                    display: true,
-                    text: `${marketStatusIcon} ${marketStatusText}${lastUpdateText}`,
-                    color: '#27ae60',
-                    font: { size: 10, family: 'IBM Plex Mono', weight: 'bold' },
-                    padding: { top: 10 }
-                };
-            }
+            // Show all data points
+            xAxisConfig.ticks.maxRotation = 0;
+            xAxisConfig.ticks.minRotation = 0;
+            xAxisConfig.ticks.autoSkip = false;
+            xAxisConfig.ticks.maxTicksLimit = dataPointCount;
         }
+        
+        xAxisConfig.title = {
+            display: true,
+            text: `${marketStatusIcon} ${marketStatusText}${autoRefreshText}${lastUpdateText}`,
+            color: marketStatusForView === "OPEN" ? '#2ecc71' : (dataPointCount <= 5 ? '#e74c3c' : (dataPointCount < expectedMaxPoints ? '#f39c12' : '#27ae60')),
+            font: { size: 12, family: 'IBM Plex Mono', weight: marketStatusForView === "OPEN" ? 'bold' : 'normal' },
+            padding: { top: 10 }
+        };
     } else if (tf === '1W') {
         xAxisConfig.ticks.maxRotation = 25;
         xAxisConfig.ticks.minRotation = 25;
         xAxisConfig.ticks.autoSkip = dataPointCount > 10;
         xAxisConfig.ticks.maxTicksLimit = Math.min(7, dataPointCount);
-        xAxisConfig.title = {
-            display: true,
-            text: `Last ${dataPointCount} Day${dataPointCount !== 1 ? 's' : ''}`,
-            color: '#9aa2ae',
-            font: { size: 10, family: 'IBM Plex Mono' },
-            padding: { top: 10 }
-        };
+        xAxisConfig.title = { display: true, text: `Last ${dataPointCount} Day${dataPointCount !== 1 ? 's' : ''}`, color: '#9aa2ae', font: { size: 12, family: 'IBM Plex Mono' }, padding: { top: 10 } };
     } else if (tf === '1M') {
         xAxisConfig.ticks.maxRotation = 45;
         xAxisConfig.ticks.minRotation = 45;
         xAxisConfig.ticks.autoSkip = dataPointCount > 15;
         xAxisConfig.ticks.maxTicksLimit = 8;
-        xAxisConfig.title = {
-            display: true,
-            text: `Last ${dataPointCount} Day${dataPointCount !== 1 ? 's' : ''}`,
-            color: '#9aa2ae',
-            font: { size: 10, family: 'IBM Plex Mono' },
-            padding: { top: 10 }
-        };
+        xAxisConfig.title = { display: true, text: `Last ${dataPointCount} Day${dataPointCount !== 1 ? 's' : ''}`, color: '#9aa2ae', font: { size: 12, family: 'IBM Plex Mono' }, padding: { top: 10 } };
     } else if (tf === '3M') {
         xAxisConfig.ticks.maxRotation = 45;
         xAxisConfig.ticks.minRotation = 45;
         xAxisConfig.ticks.autoSkip = dataPointCount > 20;
         xAxisConfig.ticks.maxTicksLimit = 10;
-        xAxisConfig.title = {
-            display: true,
-            text: `Last ${dataPointCount} Day${dataPointCount !== 1 ? 's' : ''}`,
-            color: '#9aa2ae',
-            font: { size: 10, family: 'IBM Plex Mono' },
-            padding: { top: 10 }
-        };
+        xAxisConfig.title = { display: true, text: `Last ${dataPointCount} Day${dataPointCount !== 1 ? 's' : ''}`, color: '#9aa2ae', font: { size: 12, family: 'IBM Plex Mono' }, padding: { top: 10 } };
     }
 
-    // Create custom plugin to add left and right labels on x-axis when market is open
     const customXAxisLabels = {
         id: 'customXAxisLabels',
         afterDraw(chart) {
             if (tf === '1D' && marketStatusForView === "OPEN") {
                 const ctx = chart.ctx;
                 const xAxis = chart.scales.x;
-
-                // Get market open time (11:00 AM)
                 const marketOpenTime = new Date();
                 marketOpenTime.setHours(11, 0, 0, 0);
-
-                // Get current time
                 const currentTime = new Date();
-
-                // Format times for display
+                
                 const formatTimeForDisplay = (date) => {
                     let hours = date.getHours();
                     const minutes = date.getMinutes();
@@ -677,48 +553,32 @@ async function buildIndexChart(tf) {
                     hours = hours ? hours : 12;
                     return `${hours}:${minutes.toString().padStart(2, '0')} ${period}`;
                 };
-
-                const openTimeStr = formatTimeForDisplay(marketOpenTime);
-                const currentTimeStr = formatTimeForDisplay(currentTime);
-
-                // Save context state
+                
                 ctx.save();
                 ctx.font = 'bold 11px "IBM Plex Mono"';
-                ctx.fillStyle = '#0a7c4e';
-                ctx.shadowBlur = 0;
-
-                // Get x-axis position (bottom of chart)
                 const xAxisY = xAxis.bottom + 15;
-
-                // Draw left label (Market Open)
-                const leftX = xAxis.left;
+                
                 ctx.fillStyle = '#2ecc71';
                 ctx.textAlign = 'left';
-                ctx.fillText(`🟢 OPEN: ${openTimeStr}`, leftX, xAxisY);
-
-                // Draw right label (Current Time)
-                const rightX = xAxis.right;
+                ctx.fillText(`🟢 OPEN: ${formatTimeForDisplay(marketOpenTime)}`, xAxis.left, xAxisY);
+                
                 ctx.fillStyle = '#3498db';
                 ctx.textAlign = 'right';
-                ctx.fillText(`🕐 CURRENT: ${currentTimeStr}`, rightX, xAxisY);
-
-                // Draw separator line or dots
+                ctx.fillText(`🕐 CURRENT: ${formatTimeForDisplay(currentTime)}`, xAxis.right, xAxisY);
+                
                 ctx.strokeStyle = 'rgba(46, 204, 113, 0.3)';
                 ctx.lineWidth = 1;
                 ctx.setLineDash([5, 5]);
                 ctx.beginPath();
-                ctx.moveTo(leftX, xAxis.bottom);
-                ctx.lineTo(rightX, xAxis.bottom);
+                ctx.moveTo(xAxis.left, xAxis.bottom);
+                ctx.lineTo(xAxis.right, xAxis.bottom);
                 ctx.stroke();
                 ctx.setLineDash([]);
-
-                // Restore context
                 ctx.restore();
             }
         }
     };
 
-    // Create new chart with custom plugin
     indexChart = new Chart(document.getElementById('indexChart'), {
         type: 'line',
         data: {
@@ -743,18 +603,10 @@ async function buildIndexChart(tf) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            animation: {
-                duration: 500,
-                easing: 'easeInOutQuart'
-            },
-            interaction: {
-                mode: 'index',
-                intersect: false
-            },
+            animation: { duration: 500, easing: 'easeInOutQuart' },
+            interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: {
-                    display: false
-                },
+                legend: { display: false },
                 tooltip: {
                     mode: 'index',
                     intersect: false,
@@ -762,22 +614,16 @@ async function buildIndexChart(tf) {
                         title: (tooltipItems) => {
                             if (tf === '1D') {
                                 const item = filteredData[tooltipItems[0].dataIndex];
-                                const timestamp = new Date(item.timestamp);
-                                return timestamp.toLocaleString();
+                                return new Date(item.timestamp).toLocaleString();
                             } else {
-                                const item = filteredData[tooltipItems[0].dataIndex];
-                                return item.date;
+                                return filteredData[tooltipItems[0].dataIndex].date;
                             }
                         },
                         label: (context) => {
                             const value = context.parsed.y;
                             if (tf === '1D') {
                                 const item = filteredData[context.dataIndex];
-                                const timestamp = new Date(item.timestamp);
-                                return [
-                                    `NPR ${value.toFixed(2)}`,
-                                    `Time: ${timestamp.toLocaleTimeString()}`
-                                ];
+                                return [`NPR ${value.toFixed(2)}`, `Time: ${new Date(item.timestamp).toLocaleTimeString()}`];
                             } else {
                                 const item = filteredData[context.dataIndex];
                                 return [
@@ -795,52 +641,35 @@ async function buildIndexChart(tf) {
                 x: xAxisConfig,
                 y: {
                     position: 'right',
-                    grid: {
-                        color: 'rgba(154,162,174,0.15)'
-                    },
-                    ticks: {
-                        color: '#9aa2ae',
-                        font: {
-                            size: 10,
-                            family: 'IBM Plex Mono'
-                        },
-                        callback: (value) => value.toFixed(0)
-                    },
+                    grid: { color: 'rgba(154,162,174,0.15)' },
+                    ticks: { color: '#9aa2ae', font: { size: 12, family: 'IBM Plex Mono' }, callback: (value) => value.toFixed(0) },
                     min: minValue - padding,
                     max: maxValue + padding
                 }
             }
         },
-        plugins: [customXAxisLabels] // Add the custom plugin
+        plugins: [customXAxisLabels]
     });
 
-    // Reset opacity
-    if (canvas) {
-        canvas.style.opacity = '1';
-    }
+    if (canvas) canvas.style.opacity = '1';
 }
 
-// Switch timeframe function
 async function switchTF(btn, tf) {
     document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-
+    
     const originalText = btn.textContent;
     btn.textContent = 'Loading...';
     btn.disabled = true;
-
+    
     try {
         await buildIndexChart(tf);
-        
-        // If switching to 1D view, manage refresh interval
         if (tf === '1D') {
-            manageRefreshInterval();
+            manageChartRefreshInterval();
         }
     } catch (error) {
         console.error('Error switching timeframe:', error);
-        if (indexChart) {
-            indexChart.destroy();
-        }
+        if (indexChart) indexChart.destroy();
         const canvas = document.getElementById('indexChart');
         const ctx = canvas?.getContext('2d');
         if (ctx) {
@@ -858,17 +687,13 @@ async function switchTF(btn, tf) {
 
 function displayIndexMetrics(data) {
     if (!data || data.length === 0) return;
-
     const latest = data[0];
-
     const change = parseFloat(latest.absolute_change);
     const changeSymbol = change >= 0 ? '+' : '';
-
+    
     const currentValueEl = document.getElementById('currentIndexValue');
-    if (currentValueEl) {
-        currentValueEl.textContent = parseFloat(latest.close).toFixed(2);
-    }
-
+    if (currentValueEl) currentValueEl.textContent = parseFloat(latest.close).toFixed(2);
+    
     const changeEl = document.getElementById('indexChange');
     if (changeEl) {
         changeEl.textContent = `${changeSymbol}${change.toFixed(2)} (${changeSymbol}${parseFloat(latest.percentage_change).toFixed(2)}%)`;
@@ -878,73 +703,9 @@ function displayIndexMetrics(data) {
 
 async function initChart() {
     await buildIndexChart('1D');
-    if (historicalData.length > 0) {
-        displayIndexMetrics(historicalData);
-    }
-    
-    // Start managing refresh interval based on market conditions
-    manageRefreshInterval();
+    if (historicalData.length > 0) displayIndexMetrics(historicalData);
+    manageChartRefreshInterval();
 }
 
 // Start the chart
 initChart();
-
-
-// Optional: Auto-refresh every 5 minutes (if your API updates frequently)
-// setInterval(() => {
-//     allNepseData = [];
-//     historicalData = [];
-//     initChart();
-
-// }, 60500);
-
-
-function getCookie(name) {
-    let cookieValue = null;
-
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-
-            // Check if this cookie name matches
-            if (cookie.startsWith(name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-async function fetchNepse() {
-    try {
-        const response = await fetch('/api/fetch-nepse/', {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')  // Django CSRF protection
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log(data);
-
-    } catch (error) {
-        console.error('Error fetching NEPSE data:', error);
-    }
-}
-
-// // Optional: run immediately on page load
-// fetchNepse();
-
-// // Run every 10 minutes (600,000 ms)
-// setInterval(() => {
-//     fetchNepse();
-// }, 60000);

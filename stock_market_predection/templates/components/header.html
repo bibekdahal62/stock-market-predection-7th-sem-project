@@ -1,3 +1,5 @@
+
+
 <!-- HEADER -->
 <header>
     <div class="header-inner">
@@ -8,45 +10,83 @@
                 <span class="logo-sub">Nepal Stock Exchange</span>
             </div>
         </a>
+
         <nav>
             <a href="{% url 'home' %}" class="nav-btn">Market Dashboard</a>
             <a href="{% url 'prediction' %}" class="nav-btn">Stock Prediction</a>
             <a href="{% url 'about' %}" class="nav-btn">About Us</a>
+            <a href="{% url 'portfolio' %}" class="nav-btn">Portfolio</a>
+
         </nav>
+
         <div class="live-pill" id="market-status"><span></span></div>
 
-
-
         <!-- PROFILE -->
-        
+        <a href="{% url 'portfolio' %}" class="profile-section" style="text-decoration: none;">
         <div class="profile-section">
             {% if request.user.is_authenticated %}
-            <div class="profile-avatar">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                </svg>
-            </div>
-
-            <div class="profile-name">
-                {{ request.user.first_name }}
-             {{ request.user.last_name }}</div>
-            <div class="profile-btns">
-                <a href="{% url 'logout' %}" class="btn-logout">Logout</a>
-            </div>
-
+                <div class="profile-avatar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                </div>
+                <div class="profile-name">
+                    {{ request.user.first_name }} {{ request.user.last_name }}
+                </div>
+                <div class="profile-btns">
+                    <a href="{% url 'logout' %}" class="btn-logout">Logout</a>
+                </div>
             {% else %}
-            <div class="profile-btns">
-                <a href="{% url 'login' %}" class="btn-login">Login</a>
-                <a href="{% url 'register' %}" class="btn-register">Register</a>
-            </div>
-
+                <div class="profile-btns">
+                    <a href="{% url 'login' %}" class="btn-login">Login</a>
+                    <a href="{% url 'register' %}" class="btn-register">Register</a>
+                </div>
             {% endif %}
-
         </div>
+        </a>
         <!-- END PROFILE -->
 
+        <!-- HAMBURGER BUTTON (visible only on mobile) -->
+        <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
 
     </div>
+
+    <!-- MOBILE DRAWER (shown when hamburger is clicked) -->
+    <div class="mobile-nav" id="mobile-nav">
+        <a href="{% url 'home' %}" class="nav-btn">Market Dashboard</a>
+        <a href="{% url 'prediction' %}" class="nav-btn">Stock Prediction</a>
+        <a href="{% url 'about' %}" class="nav-btn">About Us</a>
+        <a href="{% url 'portfolio' %}" class="nav-btn">Portfolio</a>
+
+        <div class="mobile-nav-divider"></div>
+
+        <div class="mobile-nav-actions">
+            {% if request.user.is_authenticated %}
+                <span style="font-size:13px; color:var(--text-secondary); font-family:var(--font-body);">
+                    {{ request.user.first_name }} {{ request.user.last_name }}
+                </span>
+                <a href="{% url 'logout' %}" class="btn-logout">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn-login">Login</a>
+                <a href="{% url 'register' %}" class="btn-register">Register</a>
+            {% endif %}
+        </div>
+    </div>
+
 </header>
+
+<!-- HAMBURGER TOGGLE SCRIPT -->
+<script>
+    const burger = document.getElementById('hamburger');
+    const drawer = document.getElementById('mobile-nav');
+    burger.addEventListener('click', () => {
+        burger.classList.toggle('open');
+        drawer.classList.toggle('open');
+    });
+</script>

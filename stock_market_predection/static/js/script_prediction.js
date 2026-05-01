@@ -30,35 +30,25 @@ let marketStatusInterval = null;
 function clearDisplayData() {
   // Clear current price
   const currentPriceElem = document.getElementById('pm-cur');
-  if (currentPriceElem) currentPriceElem.textContent = 'NPR ---';
+  if (currentPriceElem) currentPriceElem.innerHTML = 'NPR ---';
   
   // Clear high and low
   const highElem = document.getElementById('pm-high');
-  if (highElem) highElem.textContent = 'NPR ---';
+  if (highElem) highElem.innerHTML = 'NPR ---';
   
   const lowElem = document.getElementById('pm-low');
-  if (lowElem) lowElem.textContent = 'NPR ---';
-  
-  // Clear high and low changes
-  const highChgElem = document.getElementById('pm-high-chg');
-  if (highChgElem) highChgElem.innerHTML = '▲ ---%';
-  
-  const lowChgElem = document.getElementById('pm-low-chg');
-  if (lowChgElem) lowChgElem.innerHTML = '▼ ---%';
+  if (lowElem) lowElem.innerHTML = 'NPR ---';
   
   // Clear predicted value
   const predElem = document.getElementById('pm-pred');
-  if (predElem) predElem.textContent = 'NPR ---';
-  
-  const predChangeElem = document.getElementById('pm-chg');
-  if (predChangeElem) predChangeElem.innerHTML = '▲ ---%';
+  if (predElem) predElem.innerHTML = 'NPR ---';
   
   // Clear top prediction display
-  // const topPredPrice = document.getElementById('top-pred-price');
-  // if (topPredPrice) topPredPrice.textContent = 'NPR ---';
+  const topPredPrice = document.getElementById('top-pred-price');
+  if (topPredPrice) topPredPrice.textContent = 'NPR ---';
   
-  // const topPredChange = document.getElementById('top-pred-change');
-  // if (topPredChange) topPredChange.textContent = '▲ ---%';
+  const topPredChange = document.getElementById('top-pred-change');
+  if (topPredChange) topPredChange.textContent = '▲ ---%';
   
   // Clear prediction table
   const tableBody = document.getElementById('pred-price-tbody');
@@ -210,13 +200,11 @@ function pickModel(labelEl, m) {
 
   updateHorizonNote();
   refreshPrediction();
-  // liveDataChange();
 }
 
 function onHorizonChange() {
   updateHorizonNote();
   refreshPrediction();
-  // liveDataChange();
 }
 
 function onStockChange() {
@@ -229,8 +217,6 @@ function onStockChange() {
   blurPredictionChart();
   
   fetchStockData(symbol);
-  // liveDataChange();
-  
 }
 
 function updateHorizonNote() {
@@ -250,26 +236,47 @@ let predChart, volChart;
 
 // Get current price (prioritize live data over historical)
 function getCurrentPrice() {
-  if (currentLiveData && currentLiveData.ltp) {
-    return parseFloat(currentLiveData.ltp);
+  if (currentLiveData && currentLiveData.length > 0 && currentLiveData[0].ltp) {
+    return parseFloat(currentLiveData[0].ltp);
   }
   return apiData ? apiData.data[0].close : 0;
 }
 
 // Get today's high (prioritize live data)
 function getTodayHigh() {
-  if (currentLiveData && currentLiveData.high) {
-    return parseFloat(currentLiveData.high);
+  if (currentLiveData && currentLiveData.length > 0 && currentLiveData[0].high) {
+    return parseFloat(currentLiveData[0].high);
   }
   return apiData ? apiData.data[0].high : 0;
 }
 
 // Get today's low (prioritize live data)
 function getTodayLow() {
-  if (currentLiveData && currentLiveData.low) {
-    return parseFloat(currentLiveData.low);
+  if (currentLiveData && currentLiveData.length > 0 && currentLiveData[0].low) {
+    return parseFloat(currentLiveData[0].low);
   }
   return apiData ? apiData.data[0].low : 0;
+}
+
+// Get previous close price
+function getPreviousClose() {
+  if (currentLiveData && currentLiveData.length > 0 && currentLiveData[0].pr_close) {
+    return parseFloat(currentLiveData[0].pr_close);
+  }
+  return apiData && apiData.data && apiData.data[1] ? apiData.data[1].close : 0;
+}
+
+// Get percentage change
+function getPercentageChange() {
+  if (currentLiveData && currentLiveData.length > 0 && currentLiveData[0].per_change) {
+    return parseFloat(currentLiveData[0].per_change);
+  }
+  const currentPrice = getCurrentPrice();
+  const prevClose = getPreviousClose();
+  if (prevClose !== 0) {
+    return ((currentPrice - prevClose) / prevClose * 100);
+  }
+  return 0;
 }
 
 function refreshPrediction() {
@@ -285,6 +292,8 @@ function refreshPrediction() {
   const currentPrice = getCurrentPrice();
   const todayHigh = getTodayHigh();
   const todayLow = getTodayLow();
+  const percentChange = getPercentageChange();
+  const isPriceUp = percentChange >= 0;
   
   // Don't proceed if currentPrice is invalid
   if (currentPrice === 0) {
@@ -334,7 +343,7 @@ function refreshPrediction() {
     changePct = ((finalPred - currentPrice) / currentPrice * 100);
   }
 
-  const isUp = finalPred > currentPrice;
+  const isPredUp = finalPred > currentPrice;
   const modelLabel = activeModel === 'lstm' ? 'LSTM' : 'Random Forest';
 
   // Update top predicted price display
@@ -342,11 +351,11 @@ function refreshPrediction() {
   const topPredChange = document.getElementById('top-pred-change');
   if (topPredPrice) {
     topPredPrice.textContent = `NPR ${finalPred.toFixed(2)}`;
-    topPredPrice.className = isUp ? 'up' : 'dn';
+    topPredPrice.className = isPredUp ? 'up' : 'dn';
   }
   if (topPredChange) {
-    topPredChange.textContent = `${isUp ? '▲' : '▼'} ${Math.abs(changePct).toFixed(2)}%`;
-    topPredChange.className = isUp ? 'up' : 'dn';
+    topPredChange.textContent = `${isPredUp ? '▲' : '▼'} ${Math.abs(changePct).toFixed(2)}%`;
+    topPredChange.className = isPredUp ? 'up' : 'dn';
   }
 
   // Build chart labels
@@ -371,25 +380,40 @@ function refreshPrediction() {
   const highChg = ((todayHigh - currentPrice) / currentPrice * 100).toFixed(2);
   const lowChg = ((todayLow - currentPrice) / currentPrice * 100).toFixed(2);
   
+  // Update current price with percentage change inline
   const currentPriceElem = document.getElementById('pm-cur');
-  currentPriceElem.textContent = `NPR ${currentPrice.toFixed(2).toLocaleString()}`;
+  const currentPriceChange = document.getElementById('pm-stock');
+  currentPriceElem.innerHTML = `NPR ${currentPrice.toFixed(2).toLocaleString()}`;
+  currentPriceChange.innerHTML = `<span class="${isPriceUp ? 'up' : 'dn'}" style="font-size: 12px; margin-left: 8px;">${isPriceUp ? '▲' : '▼'} ${isPriceUp ? '' : '-'}${Math.abs(percentChange).toFixed(2)} %</span>`;
   
-  // Add live indicator if using live data
-  if (currentLiveData) {
-    currentPriceElem.classList.add('live-data');
-    document.getElementById('pm-stock').innerHTML = `${symbol} · Today`;
-  } else {
-    document.getElementById('pm-stock').innerHTML = `${symbol} · Today`;
+  // Update stock name display (removed LIVE text)
+  document.getElementById('pm-stock').innerHTML = `${symbol} · Today`;
+  
+  // Update high display with percentage inline
+  const highElem = document.getElementById('pm-high');
+  const highElemChgID = document.getElementById('pm-high-chg');
+  if (highElem) {
+    highElem.innerHTML = `NPR ${todayHigh.toFixed(2).toLocaleString()}`;
+    highElemChgID.innerHTML = `▲ ${Math.abs(highChg).toFixed(2)} %`;
   }
   
-  document.getElementById('pm-high').textContent = `NPR ${todayHigh.toLocaleString()}`;
-  document.getElementById('pm-high-chg').innerHTML = `▲ ${highChg >= 0 ? '+' : ''}${highChg}%`;
-  document.getElementById('pm-low').textContent = `NPR ${todayLow.toLocaleString()}`;
-  document.getElementById('pm-low-chg').innerHTML = `▼ ${lowChg}%`;
-  document.getElementById('pm-pred').textContent = `NPR ${finalPred.toFixed(2)}`;
-  document.getElementById('pm-pred').className = 'stat-val ' + (isUp ? 'up' : 'dn');
-  document.getElementById('pm-chg').innerHTML = `${isUp ? '▲' : '▼'} ${isUp ? '+' : ''}${changePct.toFixed(2)}% in ${predData.length} day${predData.length > 1 ? 's' : ''}`;
-  document.getElementById('pm-chg').className = 'stat-change ' + (isUp ? 'up' : 'dn');
+  // Update low display with percentage inline
+  const lowElem = document.getElementById('pm-low');
+  const lowElemChgID = document.getElementById('pm-low-chg');
+  if (lowElem) {
+    lowElem.innerHTML = `NPR ${todayLow.toFixed(2).toLocaleString()}`;
+    lowElemChgID.innerHTML = `▼ -${Math.abs(lowChg).toFixed(2)} %`;
+  }
+  
+  // Update predicted price display with percentage inline
+  const predElem = document.getElementById('pm-pred');
+  const predElemChg = document.getElementById('pm-chg');
+  if (predElem) {
+    predElem.innerHTML = `NPR ${finalPred.toFixed(2).toLocaleString()}`;
+    predElemChg.innerHTML = `<span class="${isPredUp ? 'up' : 'dn'}" style="font-size: 12px; margin-left: 8px;">${isPredUp ? '▲' : '▼'} ${isPredUp ? '' : '-'}${Math.abs(changePct).toFixed(2)} % in ${predData.length} day${predData.length > 1 ? 's' : ''}</span>`
+    predElem.className = 'stat-val';
+  }
+  
   document.getElementById('pred-title').innerHTML = `${symbol} — ${stockName} · Prediction (${predData.length} Day${predData.length > 1 ? 's' : ''})`;
 
   // Signal box with updated percentages
@@ -528,7 +552,7 @@ function buildPredTable(currentPrice, predData, upBand, loBand) {
       <td>${dayLabel}</td>
       <td>${dateStr}</td>
       <td style="font-weight:600">NPR ${price.toFixed(2)}</td>
-      <td class="${isUp ? 'up' : 'dn'}">${isUp ? '▲ +' : '▼ '}${chg.toFixed(2)}%</td>
+      <td class="${isUp ? 'up' : 'dn'}">${isUp ? '▲ +' : '▼ '}${Math.abs(chg).toFixed(2)}%</td>
       <td class="ci-range">NPR ${loBand[i].toFixed(2)}</td>
       <td class="ci-range">NPR ${upBand[i].toFixed(2)}</td>
     </tr>`;
@@ -575,37 +599,85 @@ function buildVolChart() {
 }
 
 // LIVE DATA UPDATE - Now updates all displays dynamically
+// LIVE DATA UPDATE - Now updates all displays dynamically
+// LIVE DATA UPDATE - Now updates all displays dynamically
 async function liveDataChange() {
   try {
     const symbol = document.getElementById('stock-sel').value;
     const marketStatusEl = document.querySelector('#market-status');
     const isMarketOpen = marketStatusEl && marketStatusEl.classList.contains('live-pill');
     
-    // if (!isMarketOpen) {
-    //   console.log('Market closed - skipping live data update');
-    //   return;
-    // }
-    
     const res = await fetch(`/prediction/live-stock-data/${symbol}/`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
-    currentLiveData = data; // Store the live data
+    currentLiveData = data; // Store the live data array
+    
+    // Update the timestamp display
+    const updateIndicator = document.getElementById('live-update-time');
+    if (updateIndicator && data && data.length > 0 && data[0].timestamp) {
+      const timestamp = new Date(data[0].timestamp);
+      const formattedDate = timestamp.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      const formattedTime = timestamp.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+      
+      updateIndicator.innerHTML = `Last updated: ${formattedDate} at ${formattedTime} ${isMarketOpen ? '• LIVE' : ''}`;
+      updateIndicator.style.fontSize = '14px';
+      updateIndicator.style.color = '#505761';
+      updateIndicator.style.padding = '8px 12px';
+      updateIndicator.style.marginBottom = '10px';
+      updateIndicator.style.borderBottom = '1px solid rgba(154,162,174,0.2)';
+    } else if (updateIndicator) {
+      const now = new Date();
+      const formattedDate = now.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      const formattedTime = now.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+      updateIndicator.innerHTML = `Last updated: ${formattedDate} at ${formattedTime} ${isMarketOpen ? ' • LIVE' : ''}`;
+    }
     
     // Refresh everything with the new live data
     if (apiData) {
       refreshPrediction(); // This will use the live data via getCurrentPrice()
     }
     
-    const timestamp = new Date().toLocaleTimeString();
-    const updateIndicator = document.getElementById('live-update-time');
-    if (updateIndicator) {
-      updateIndicator.innerHTML = `📡 Last update: ${timestamp} ${isMarketOpen ? '• LIVE' : ''}`;
-    }
-
-    // console.log("Live data updated at", timestamp);
+    console.log("Live data updated successfully");
   } catch (e) {
     console.error("Live data fetch failed:", e);
+    
+    // Show error in update time display
+    const updateIndicator = document.getElementById('live-update-time');
+    if (updateIndicator) {
+      const now = new Date();
+      const formattedDate = now.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      const formattedTime = now.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+      updateIndicator.innerHTML = `⚠️ Failed to fetch live data at ${formattedDate} at ${formattedTime}`;
+      updateIndicator.style.color = '#e74c3c';
+    }
   }
 }
 

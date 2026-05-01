@@ -1,0 +1,461 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Portfolio & Profile — Hamro Stock{% endblock %}
+
+{% block extracss %}
+<link rel="stylesheet" href="{% static 'css/portfolio.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <!-- ── PAGE HEADER ── -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Portfolio & Profile</h1>
+      <p class="page-sub">Track your holdings and manage your account</p>
+    </div>
+  </div>
+
+  <!-- ── TWO-COLUMN LAYOUT ── -->
+  <div class="pf-layout">
+
+    <!-- ════════════════════════════════════
+         LEFT — PROFILE PANEL
+    ════════════════════════════════════ -->
+    <aside class="profile-panel">
+
+      <!-- Avatar -->
+      <div class="profile-avatar-wrap-2">
+        <div class="profile-avatar-2" id="profile-avatar">
+          {{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}
+        </div>
+        <div class="profile-online-dot"></div>
+      </div>
+
+      <h2 class="profile-name">{{ user.get_full_name }}</h2>
+      <p class="profile-handle">@{{ user.username }}</p>
+
+      <div class="profile-divider"></div>
+
+      <!-- Info rows -->
+      <div class="profile-info-list">
+        <div class="profile-info-row">
+          <span class="profile-info-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </span>
+          <div>
+            <div class="profile-info-label">Email</div>
+            <div class="profile-info-val">{{ user.email }}</div>
+          </div>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </span>
+          <div>
+            <div class="profile-info-label">First Name</div>
+            <div class="profile-info-val">{{ user.first_name }}</div>
+          </div>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </span>
+          <div>
+            <div class="profile-info-label">Last Name</div>
+            <div class="profile-info-val">{{ user.last_name }}</div>
+          </div>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </span>
+          <div>
+            <div class="profile-info-label">Member Since</div>
+            <div class="profile-info-val">{{ user.date_joined|date:"M Y" }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-divider"></div>
+
+      <!-- Portfolio summary stats -->
+      <div class="profile-stat-grid">
+        <div class="profile-stat">
+          <div class="profile-stat-val up" id="sidebar-gain">—</div>
+          <div class="profile-stat-label">Today's Gain</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-val" id="sidebar-holdings">0</div>
+          <div class="profile-stat-label">Holdings</div>
+        </div>
+      </div>
+
+      <a href="{% url 'logout' %}" class="profile-logout-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </a>
+
+    </aside>
+
+    <!-- ════════════════════════════════════
+         RIGHT — PORTFOLIO PANEL
+    ════════════════════════════════════ -->
+    <div class="portfolio-panel">
+
+      <!-- Summary bar -->
+      <div class="pf-summary-bar">
+        <div class="pf-summary-item">
+          <div class="pf-summary-label">Invested</div>
+          <div class="pf-summary-val" id="total-invested">NPR 0</div>
+        </div>
+        <div class="pf-summary-item">
+          <div class="pf-summary-label">Current Value</div>
+          <div class="pf-summary-val" id="total-current">NPR 0</div>
+        </div>
+        <div class="pf-summary-item">
+          <div class="pf-summary-label">Total Gain / Loss</div>
+          <div class="pf-summary-val" id="total-gl">NPR 0</div>
+        </div>
+        <div class="pf-summary-item">
+          <div class="pf-summary-label">Return</div>
+          <div class="pf-summary-val" id="total-return">0.00%</div>
+        </div>
+      </div>
+
+      <!-- Add stock form -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Add to Portfolio</span>
+        </div>
+        <div class="card-body">
+          <form id="add-stock-form" novalidate>
+            {% csrf_token %}
+            <div class="add-form-grid">
+              <div class="form-field">
+                <label class="form-label">Stock Symbol</label>
+                <input type="text" id="input-symbol" class="form-input" placeholder="e.g. NABIL" autocomplete="off" style="text-transform:uppercase">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Purchase Price (Per Quantity)(NPR)</label>
+                <input type="number" id="input-price" class="form-input" placeholder="e.g. 100.00" min="100" step="0.01">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Quantity (Units)</label>
+                <input type="number" id="input-qty" class="form-input" placeholder="e.g. 50" min="10" step="1">
+              </div>
+              <div class="form-field form-field-btn">
+                <button type="submit" class="add-btn" id="add-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add Stock
+                </button>
+              </div>
+            </div>
+            <div class="form-error" id="form-error"></div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Holdings table -->
+      <div class="card" id="holdings-card">
+        <div class="card-head">
+          <span class="card-title">My Holdings</span>
+          <span class="card-meta" id="holdings-count">0 stocks</span>
+        </div>
+
+        <!-- Empty state -->
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <p class="empty-title">No holdings yet</p>
+          <p class="empty-sub">Add your first stock above to start tracking your portfolio.</p>
+        </div>
+
+        <!-- Table wrapper -->
+        <div class="table-scroll" id="table-wrap" style="display:none">
+          <table id="holdings-table">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Qty</th>
+                <th>Avg. Buy</th>
+                <th>LTP</th>
+                <th>Invested</th>
+                <th>Curr. Value</th>
+                <th>Gain / Loss</th>
+                <th>Return %</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="holdings-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /.portfolio-panel -->
+  </div><!-- /.pf-layout -->
+
+</div><!-- /.container -->
+{% endblock %}
+
+{% block extra_script %}
+<script>
+/* ═══════════════════════════════════════════════════════
+   Hamro Stock — Portfolio JS
+   All data is server-side (DB per user). localStorage removed.
+═══════════════════════════════════════════════════════ */
+
+const CSRF = (() => {
+  const m = document.cookie.match(/csrftoken=([^;]+)/);
+  return m ? m[1] : '';
+})();
+
+/* ── Formatting helpers ── */
+function fmtNum(n, dec = 2) {
+  return Number(n).toLocaleString('en-IN', {
+    minimumFractionDigits: dec,
+    maximumFractionDigits: dec,
+  });
+}
+function fmtCur(n)   { return 'NPR ' + fmtNum(n); }
+function colorCls(v) { return Number(v) >= 0 ? 'up' : 'dn'; }
+function arrow(v)    { return Number(v) >= 0 ? '▲' : '▼'; }
+
+/* ── DOM refs ── */
+const formEl        = document.getElementById('add-stock-form');
+const inputSymbol   = document.getElementById('input-symbol');
+const inputPrice    = document.getElementById('input-price');
+const inputQty      = document.getElementById('input-qty');
+const formError     = document.getElementById('form-error');
+const addBtn        = document.getElementById('add-btn');
+const holdingsBody  = document.getElementById('holdings-body');
+const emptyState    = document.getElementById('empty-state');
+const tableWrap     = document.getElementById('table-wrap');
+const holdingsCount = document.getElementById('holdings-count');
+
+/* ── Summary DOM refs ── */
+const elInvested    = document.getElementById('total-invested');
+const elCurrent     = document.getElementById('total-current');
+const elGL          = document.getElementById('total-gl');
+const elReturn      = document.getElementById('total-return');
+const elSideGain    = document.getElementById('sidebar-gain');
+const elSideCount   = document.getElementById('sidebar-holdings');
+
+/* ══════════════════════════════════════
+   FETCH HOLDINGS FROM SERVER
+══════════════════════════════════════ */
+async function loadHoldings() {
+  try {
+    const res  = await fetch('/api/holdings/');
+    const data = await res.json();
+    renderTable(data.holdings);
+    updateSummary(data.holdings);
+  } catch (err) {
+    console.error('Failed to load holdings:', err);
+  }
+}
+
+/* ══════════════════════════════════════
+   RENDER TABLE
+══════════════════════════════════════ */
+function renderTable(holdings) {
+  holdingsBody.innerHTML = '';
+
+  if (!holdings || holdings.length === 0) {
+    emptyState.style.display = 'flex';
+    tableWrap.style.display  = 'none';
+    holdingsCount.textContent = '0 stocks';
+    return;
+  }
+
+  emptyState.style.display = 'none';
+  tableWrap.style.display  = 'block';
+  holdingsCount.textContent = holdings.length + (holdings.length === 1 ? ' stock' : ' stocks');
+
+  holdings.forEach(h => {
+    const ltp     = h.ltp ?? h.buy_price;
+    const gl      = h.gain_loss;
+    const ret     = h.return_pct;
+    const chg     = h.change_percent;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <div class="sym">${h.symbol}</div>
+        ${chg != null
+          ? `<div class="sym-chg ${colorCls(chg)}">${arrow(chg)} ${fmtNum(Math.abs(chg))}%</div>`
+          : ''}
+      </td>
+      <td>${fmtNum(h.quantity, 0)}</td>
+      <td>NPR ${fmtNum(h.buy_price)}</td>
+      <td>${h.ltp != null ? 'NPR ' + fmtNum(h.ltp) : '<span class="sym-loading">—</span>'}</td>
+      <td>NPR ${fmtNum(h.invested)}</td>
+      <td>NPR ${fmtNum(h.current_value)}</td>
+      <td class="${colorCls(gl)}">${arrow(gl)} NPR ${fmtNum(Math.abs(gl))}</td>
+      <td class="${colorCls(ret)}">${arrow(ret)} ${fmtNum(Math.abs(ret))}%</td>
+      <td>
+        <button class="del-btn" data-id="${h.id}" title="Remove">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14H6L5 6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/>
+            <path d="M9 6V4h6v2"/>
+          </svg>
+        </button>
+      </td>`;
+    holdingsBody.appendChild(tr);
+  });
+
+  /* Delete button listeners */
+  holdingsBody.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteHolding(btn.dataset.id));
+  });
+}
+
+/* ══════════════════════════════════════
+   SUMMARY BAR + SIDEBAR
+══════════════════════════════════════ */
+function updateSummary(holdings) {
+  if (!holdings || holdings.length === 0) {
+    elInvested.textContent  = 'NPR 0';
+    elCurrent.textContent   = 'NPR 0';
+    elGL.textContent        = 'NPR 0';
+    elGL.className          = 'pf-summary-val';
+    elReturn.textContent    = '0.00%';
+    elReturn.className      = 'pf-summary-val';
+    elSideGain.textContent  = 'NPR 0';
+    elSideGain.className    = 'profile-stat-val';
+    elSideCount.textContent = '0';
+    return;
+  }
+
+  const totalInvested = holdings.reduce((s, h) => s + h.invested, 0);
+  const totalCurrent  = holdings.reduce((s, h) => s + h.current_value, 0);
+  const gl  = totalCurrent - totalInvested;
+  const ret = totalInvested > 0 ? (gl / totalInvested) * 100 : 0;
+
+  elInvested.textContent = fmtCur(totalInvested);
+  elCurrent.textContent  = fmtCur(totalCurrent);
+
+  elGL.textContent  = arrow(gl)  + ' ' + fmtCur(Math.abs(gl));
+  elGL.className    = 'pf-summary-val ' + colorCls(gl);
+
+  elReturn.textContent = arrow(ret) + ' ' + fmtNum(Math.abs(ret)) + '%';
+  elReturn.className   = 'pf-summary-val ' + colorCls(ret);
+
+  elSideGain.textContent = (gl >= 0 ? '+' : '') + fmtCur(gl);
+  elSideGain.className   = 'profile-stat-val ' + colorCls(gl);
+  elSideCount.textContent = holdings.length;
+}
+
+/* ══════════════════════════════════════
+   ADD STOCK
+══════════════════════════════════════ */
+formEl.addEventListener('submit', async function (e) {
+  e.preventDefault();
+  formError.textContent = '';
+
+  const symbol   = inputSymbol.value.trim().toUpperCase();
+  const buyPrice = parseFloat(inputPrice.value);
+  const qty      = parseInt(inputQty.value, 10);
+
+  if (!symbol)                        { formError.textContent = 'Please enter a stock symbol.'; return; }
+  if (isNaN(buyPrice) || buyPrice <= 0) { formError.textContent = 'Enter a valid purchase price.'; return; }
+  if (isNaN(qty) || qty < 1)          { formError.textContent = 'Enter a valid quantity (min 1).'; return; }
+
+  addBtn.disabled    = true;
+  addBtn.textContent = 'Adding…';
+
+  try {
+    const res = await fetch('/api/holdings/add/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken':  CSRF,
+      },
+      body: JSON.stringify({ symbol, buy_price: buyPrice, quantity: qty }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      formError.textContent = data.error || 'Failed to add stock.';
+      return;
+    }
+
+    inputSymbol.value = '';
+    inputPrice.value  = '';
+    inputQty.value    = '';
+    await loadHoldings();
+
+  } catch (err) {
+    formError.textContent = 'Network error. Please try again.';
+    console.error(err);
+  } finally {
+    addBtn.disabled    = false;
+    addBtn.innerHTML   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+      stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg> Add Stock`;
+  }
+});
+
+/* ══════════════════════════════════════
+   DELETE HOLDING
+══════════════════════════════════════ */
+async function deleteHolding(id) {
+  try {
+    const res = await fetch(`/api/holdings/${id}/delete/`, {
+      method: 'DELETE',
+      headers: { 'X-CSRFToken': CSRF },
+    });
+    if (res.ok) await loadHoldings();
+    else console.error('Delete failed');
+  } catch (err) {
+    console.error('Delete error:', err);
+  }
+}
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+loadHoldings();
+
+
+async function marketStatus(){
+    const res = await fetch('/api/market-status/');
+    const data = await res.json();
+    const status = document.querySelector('#market-status');
+
+    if (data.isOpen === 'OPEN') {
+        status.innerHTML = '<span class="live-dot"></span> OPEN</div>'
+        status.classList.remove('close-pill');
+        status.classList.add('live-pill');
+        
+
+        // 👉 start interval ONLY if not already running
+        // if (!marketStatusInterval) {
+        //     marketStatusInterval = setInterval(updateData, 200000); // 10 sec
+        // }
+
+    } else {
+        status.innerHTML = '<span class="close-dot"></span> CLOSE</div>'
+        status.classList.remove('live-pill');
+        status.classList.add('close-pill');
+        // marketTime.innerText = 'As of: ' + formatted;
+
+        // 👉 stop auto refresh when market is closed
+        // if (marketStatusInterval) {
+        //     clearInterval(marketStatusInterval);
+        //     marketStatusInterval = null;
+        // }
+
+    }
+}
+marketStatus();
+</script>
+{% endblock %}

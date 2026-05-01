@@ -170,6 +170,11 @@ class StockData(models.Model):
     ltp = models.DecimalField(max_digits=10, decimal_places=2)
     change_percent = models.DecimalField(max_digits=6, decimal_places=2)
     up = models.BooleanField()
+    open = models.FloatField(null=True, blank=True)
+    high = models.FloatField(null=True, blank=True)
+    low = models.FloatField(null=True, blank=True)
+    traded_quantity = models.FloatField(null=True, blank=True)
+    traded_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
 
 
     def save(self, *args, **kwargs):

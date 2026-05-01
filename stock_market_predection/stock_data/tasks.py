@@ -67,18 +67,18 @@ def store_data():
             negative_circuit = 0
 
             for stock in stocks:
-                change = stock.get("percentageChange", 0)
+                change = stock.get("percentageChange")
 
                 if change == 0:
                     unchanged += 1
 
-                elif change >= 0:
+                elif change > 0:
                     advancing += 1
 
-                elif change <= 0:
+                elif change < 0:
                     declining += 1
 
-                elif change >=9.8:
+                elif change >= 9.8:
                     postitive_circuit += 1
 
                 elif change <= -9.8:
@@ -304,6 +304,18 @@ def store_data():
                             traded_amount=stock['totalTradeValue'],
                             status = -1 if per_change < 0 else (1 if per_change > 0 else 0)
                             )
+                        
+                    StockData.objects.create(
+                        timestamp= now,
+                        symbol= stock['symbol'],
+                        ltp= stock['lastTradedPrice'],
+                        change_percent= stock['percentageChange'],
+                        open = stock['openPrice'],
+                        high=stock['highPrice'],
+                        low= stock['lowPrice'],
+                        traded_quantity= stock['totalTradeQuantity'],
+                        traded_amount=stock['totalTradeValue'],
+                    )
                 logger.info("End of day stock summary stored...")
                         
     except Exception as e:

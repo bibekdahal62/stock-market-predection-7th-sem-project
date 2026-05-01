@@ -25,5 +25,6 @@ urlpatterns = [
     path('api/', include('api.urls')),
     path('', include('prediction.urls')),
     path('', include('authentication.urls')),
+    path('', include('portfolio.urls')),
 
 ]
