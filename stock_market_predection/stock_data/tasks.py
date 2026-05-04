@@ -9,44 +9,88 @@ logger = logging.getLogger(__name__)
 
 
 
-nepse_stocks = [
-    "RIDI",   # Ridi Power Company – high turnover & volume leader
-    "KBL",    # Kumari Bank Ltd – very high share count
-    "API",    # API Power Company – heavy volume
-    "NHPC",   # National Hydro Power Co – major hydropower mover
-    "NRN",    # NRN Infrastructure & Dev – big turnover
-    "SYPNL",  # SY Panel Nepal Ltd – strong volume
-    "HIDCL",  # Hydroelectricity Investment & Dev Co – high volume
-    "SMHL",   # Saptakoshi Hydropower Ltd – popular hydro stock
-    "NICA",   # NIC Asia Bank Ltd – big banking stock
-    "EBL",    # Everest Bank Ltd – frequently traded bank
-    "NABIL",  # Nabil Bank Ltd – top bank name
-    "SBL",    # Standard Bank Ltd – frequent name in watchlists
-    "SHIVM",  # Shivam Cements – active manufacturing stock
-    "SOHL",   # Solu Hydropower – seen in volume leaders
-    "AKJCL",  # Ankhu Khola Jalvidhyut Co – big turnover presence
-    "MFIL",   # Manjushree Finance Ltd – often active finance
-    "NRIC",   # Nepal Reinsurance Co – active insurance name
-    "BPCL",   # Butwal Power Co – noted in turnover lists
-    "SHPC",   # Sanima Mai Hydropower Ltd – notable turnover
-    "RADHI"   # Radhi Bidyut Co – strong turnover presence
-]
+def end_day_summary(now, nepse_index, change, per_change, high, low, fiftyTwoWeekHigh, fiftyTwoWeekLow, turnover, shares, transaction_count, scripts, stocks):
+    # Store end-of-day summary (15:00–15:01)
+    if time(15, 2) <= now.time() <= time(15, 3):
+        NepseIndex.objects.create(
+            date=now.date(),
+            close=nepse_index,
+            high=high,
+            low=low,
+            absolute_change=change,
+            percentage_change=per_change,
+            week_52_high=fiftyTwoWeekHigh,
+            week_52_low=fiftyTwoWeekLow,
+            turnover_values=turnover,
+            turnover_volume=shares,
+            total_transaction=transaction_count,
+            scripts=scripts
+        )
+        logger.info("End-of-day NEPSE summary stored.")
+
+        for stock in stocks:
+            if stock['symbol'] == 'UPPER':
+                Upper.objects.create(
+                    published_date = now.date(),
+                    open = stock['openPrice'],
+                    high=stock['highPrice'],
+                    low= stock['lowPrice'],
+                    close= stock['lastTradedPrice'],
+                    per_change=stock['percentageChange'],
+                    traded_quantity= stock['totalTradeQuantity'],
+                    traded_amount=stock['totalTradeValue'],
+                    status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
+                    )
+            elif stock['symbol'] == 'HBL':
+                Hbl.objects.create(
+                    published_date = now.date(),
+                    open = stock['openPrice'],
+                    high=stock['highPrice'],
+                    low= stock['lowPrice'],
+                    close= stock['lastTradedPrice'],
+                    per_change=stock['percentageChange'],
+                    traded_quantity= stock['totalTradeQuantity'],
+                    traded_amount=stock['totalTradeValue'],
+                    status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
+                    )
+                
+            StockData.objects.create(
+                timestamp= now,
+                symbol= stock['symbol'],
+                ltp= stock['lastTradedPrice'],
+                change_percent= stock['percentageChange'],
+                open = stock['openPrice'],
+                high=stock['highPrice'],
+                low= stock['lowPrice'],
+                traded_quantity= stock['totalTradeQuantity'],
+                traded_amount=stock['totalTradeValue'],
+            )
+        logger.info("End of day stock summary stored...")
+    return
+
 
 
 def store_data():
-    now = timezone.localtime()
-
-    # ✅ Only run during market days/times
-    if not (now.weekday() < 5 and time(11, 0) <= now.time() <= time(15, 4)):
-        logger.info("Outside market time. Skipping data store.")
-        return
-
+        
     try:
+        now = timezone.localtime()
         nepse = Nepse()
         status = nepse.get_market_status()
+        # ✅ Only run during market days/times
+        is_weekday = now.weekday() < 5
+        is_market_time = time(11, 0) <= now.time() <= time(15, 4)
+        is_market_open = status.get('isOpen') != 'CLOSE'
 
-        # if status.get('isopen') == False:
-        #     logger.info('Market is currently close due to National Holiday....')
+
+        if not (is_weekday and is_market_time):
+            logger.info("Market closed or outside trading time.")
+            return
+        
+        # print(status)
+
+
+        # if status.get('isOpen') == 'CLOSE':
+        #     logger.info('Market is currently close due to National Holiday. Skipping data store.')
         #     return
         
         # -------- API CALLS (protected) --------
@@ -58,7 +102,6 @@ def store_data():
             loosers = nepse.get_top_losers(limit=5)
             sectors = nepse.get_sub_indices()
 
-            stocks = nepse.get_stocks()
             total_listed = len(stocks)
             advancing = 0
             declining = 0
@@ -69,20 +112,18 @@ def store_data():
             for stock in stocks:
                 change = stock.get("percentageChange")
 
-                if change == 0:
-                    unchanged += 1
-
+                if change >= 14:
+                    postitive_circuit += 1
+                    advancing += 1
+                elif change <= -14:
+                    negative_circuit += 1
+                    declining += 1
                 elif change > 0:
                     advancing += 1
-
                 elif change < 0:
                     declining += 1
-
-                elif change >= 9.8:
-                    postitive_circuit += 1
-
-                elif change <= -9.8:
-                    negative_circuit += 1
+                else:
+                    unchanged += 1
             
         except Exception as e:
             logger.error(f"Failed to fetch data from NEPSE API: {e}")
@@ -124,9 +165,14 @@ def store_data():
         if nepse_index is None:
             logger.error("NEPSE Index data not found.")
             return
+        
 
         # -------- DATABASE OPERATIONS (atomic) --------
         with transaction.atomic():
+            if not is_market_open:
+                logger.info("Market closed storing end day summary only...")
+                end_day_summary(now, nepse_index, change, per_change, high, low, fiftyTwoWeekHigh, fiftyTwoWeekLow, turnover, shares, transaction_count, scripts, stocks)
+                return
 
             # Store Most Active Stocks (11:00–15:00)
             if time(11, 0) <= now.time() <= time(15, 1):
@@ -235,7 +281,7 @@ def store_data():
                             per_change=stock['percentageChange'],
                             traded_quantity= stock['totalTradeQuantity'],
                             traded_amount=stock['totalTradeValue'],
-                            status = -1 if per_change < 0 else (1 if per_change > 0 else 0)
+                            status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
                             )
                     elif stock['symbol'] == 'HBL':
                         HblLive.objects.create(
@@ -248,75 +294,23 @@ def store_data():
                             per_change=stock['percentageChange'],
                             traded_quantity= stock['totalTradeQuantity'],
                             traded_amount=stock['totalTradeValue'],
-                            status = -1 if per_change < 0 else (1 if per_change > 0 else 0)
+                            status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
                             )
 
-                    if stock['symbol'] in nepse_stocks:
+                    if ((time(11, 1) <= now.time() <= time(11, 2)) or (time(12, 0) <= now.time() <= time(12, 1)) or (time(13, 0) <= now.time() <= time(13, 1)) or (time(14, 0) <= now.time() <= time(14, 1))):
                         StockData.objects.create(
                             timestamp= now,
                             symbol= stock['symbol'],
                             ltp= stock['lastTradedPrice'],
-                            change_percent= stock['percentageChange']
+                            change_percent= stock['percentageChange'],
+                            open = stock['openPrice'],
+                            high=stock['highPrice'],
+                            low= stock['lowPrice'],
+                            traded_quantity= stock['totalTradeQuantity'],
+                            traded_amount=stock['totalTradeValue'],
                         )
-                    
+                # logger.info("Hourly stock summary stored.")  
                 logger.info("Live stock stock summary stored...")
-
-            # Store end-of-day summary (15:00–15:01)
-            if time(15, 2) <= now.time() <= time(15, 3):
-                NepseIndex.objects.create(
-                    date=now.date(),
-                    close=nepse_index,
-                    high=high,
-                    low=low,
-                    absolute_change=change,
-                    percentage_change=per_change,
-                    week_52_high=fiftyTwoWeekHigh,
-                    week_52_low=fiftyTwoWeekLow,
-                    turnover_values=turnover,
-                    turnover_volume=shares,
-                    total_transaction=transaction_count,
-                    scripts=scripts
-                )
-                logger.info("End-of-day NEPSE summary stored.")
-
-                for stock in stocks:
-                    if stock['symbol'] == 'UPPER':
-                        Upper.objects.create(
-                            published_date = now.date(),
-                            open = stock['openPrice'],
-                            high=stock['highPrice'],
-                            low= stock['lowPrice'],
-                            close= stock['lastTradedPrice'],
-                            per_change=stock['percentageChange'],
-                            traded_quantity= stock['totalTradeQuantity'],
-                            traded_amount=stock['totalTradeValue'],
-                            status = -1 if per_change < 0 else (1 if per_change > 0 else 0)
-                            )
-                    elif stock['symbol'] == 'HBL':
-                        Hbl.objects.create(
-                            published_date = now.date(),
-                            open = stock['openPrice'],
-                            high=stock['highPrice'],
-                            low= stock['lowPrice'],
-                            close= stock['lastTradedPrice'],
-                            per_change=stock['percentageChange'],
-                            traded_quantity= stock['totalTradeQuantity'],
-                            traded_amount=stock['totalTradeValue'],
-                            status = -1 if per_change < 0 else (1 if per_change > 0 else 0)
-                            )
-                        
-                    StockData.objects.create(
-                        timestamp= now,
-                        symbol= stock['symbol'],
-                        ltp= stock['lastTradedPrice'],
-                        change_percent= stock['percentageChange'],
-                        open = stock['openPrice'],
-                        high=stock['highPrice'],
-                        low= stock['lowPrice'],
-                        traded_quantity= stock['totalTradeQuantity'],
-                        traded_amount=stock['totalTradeValue'],
-                    )
-                logger.info("End of day stock summary stored...")
                         
     except Exception as e:
         logger.exception(f"Unexpected error in store_data(): {e}")

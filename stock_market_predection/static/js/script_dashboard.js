@@ -1,37 +1,5 @@
 let marketStatusInterval = null;
 
-
-async function marketStatus(){
-    const res = await fetch('/api/market-status/');
-    const data = await res.json();
-    const status = document.querySelector('#market-status');
-
-    if (data.isOpen === 'OPEN') {
-        status.innerHTML = '<span class="live-dot"></span> OPEN</div>'
-        status.classList.remove('close-pill');
-        status.classList.add('live-pill');
-        
-
-        // 👉 start interval ONLY if not already running
-        // if (!marketStatusInterval) {
-        //     marketStatusInterval = setInterval(updateData, 200000); // 10 sec
-        // }
-
-    } else {
-        status.innerHTML = '<span class="close-dot"></span> CLOSE</div>'
-        status.classList.remove('live-pill');
-        status.classList.add('close-pill');
-        // marketTime.innerText = 'As of: ' + formatted;
-
-        // 👉 stop auto refresh when market is closed
-        // if (marketStatusInterval) {
-        //     clearInterval(marketStatusInterval);
-        //     marketStatusInterval = null;
-        // }
-
-    }
-}
-
 async function updateData() {
     const res = await fetch('/api/stock-data/');
     const data = await res.json()
@@ -98,15 +66,18 @@ async function updateData() {
 
 
     //Top Gainers
-    document.getElementById('gainers-body').innerHTML = data.gainers.map(d =>
-        `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</div></td><td><span class="badge badge-up">${d.point_change}</span></td><td><span class="badge badge-up">${d.percentage_change}</span></td></tr>`
+    document.getElementById('gainers-body').innerHTML = [...data.gainers]
+    .sort((a, b) => b.percentage_change - a.percentage_change)
+    .map(d =>
+        `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</td><td><span class="badge badge-up">${d.point_change}</span></td><td><span class="badge badge-up">${d.percentage_change}</span></td></tr>`
     ).join('');
 
-
-    //Top Loosers
-    document.getElementById('losers-body').innerHTML = data.loosers.map(d =>
-        `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</div></td><td><span class="badge badge-dn">${d.point_change}</span></td><td><span class="badge badge-dn">${d.percentage_change}</span></tr>`
-    ).join('');
+    //Top losers
+    document.getElementById('losers-body').innerHTML = [...data.loosers]
+        .sort((a, b) => a.percentage_change - b.percentage_change)
+        .map(d =>
+            `<tr><td><div class="sym">${d.symbol}</div></td><td>${d.ltp}</td><td><span class="badge badge-dn">${d.point_change}</span></td><td><span class="badge badge-dn">${d.percentage_change}</span></td></tr>`
+        ).join('');
 
 
     //Sectors
@@ -162,8 +133,6 @@ async function updateData() {
 
     
     // console.log('market status: ', data.isOpen)
-
-    marketStatus();
 
 
 }

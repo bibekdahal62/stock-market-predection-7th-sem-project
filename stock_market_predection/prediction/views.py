@@ -50,8 +50,8 @@ stock_names = {
         'lstm': {
             "lstm_model": os.path.join(BASE, "prediction", "saved_models", "lstm", "hbl", "two_models","lstm_model_30d.keras"),
             "gru_model": os.path.join(BASE, "prediction", "saved_models", "lstm", "hbl", "two_models","gru_model_15d.keras"),
-            "scaler_feature_path": os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "two_models","scaler_features.pkl"),
-            "scaler_target_path": os.path.join(BASE, "prediction", "saved_models", "lstm", "upper", "two_models","scaler_targets.pkl")
+            "scaler_feature_path": os.path.join(BASE, "prediction", "saved_models", "lstm", "hbl", "two_models","scaler_features.pkl"),
+            "scaler_target_path": os.path.join(BASE, "prediction", "saved_models", "lstm", "hbl", "two_models","scaler_targets.pkl")
         }
     }
 }
@@ -93,10 +93,10 @@ def predection_data(request, stock):
 
         lstm_model = stock_name['lstm']['lstm_model']
         gru_model = stock_name['lstm']['gru_model']
-        # model_2 = stock_name['lstm']['model2']
+        
         scaler_feature_path = stock_name['lstm']['scaler_feature_path']
         scaler_target_path = stock_name['lstm']['scaler_target_path']
-        # lstm_predection = predictor_lstm.predict_next_day(model_path=model_path, scaler_feature_path=scaler_feature_path, scaler_target_path=scaler_target_path, data=qs)
+        
         lstm_prediction = predictor_lstm_gru.predict_next_day(
             data=qs,
             lstm_model=lstm_model,
@@ -104,6 +104,11 @@ def predection_data(request, stock):
             scaler_feature=scaler_feature_path,
             scaler_target=scaler_target_path
         )
+
+        # print(lstm_prediction)
+        # print('----------------------------------------')
+        # print(random_forest_predection)
+        # print('-------------------------------------')
 
         return Response({
             'message': 'success',

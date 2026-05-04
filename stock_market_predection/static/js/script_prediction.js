@@ -1,24 +1,5 @@
 // MODEL DATA
 
-async function getMarketStatus() {
-  const res = await fetch('/api/market-status/');
-  const data = await res.json();
-
-  const status = document.querySelector('#market-status');
-
-  if (data.isOpen === 'OPEN') {
-    status.innerHTML = '<span class="live-dot"></span> OPEN</div>'
-    status.classList.remove('close-pill');
-    status.classList.add('live-pill');
-  } else {
-    status.innerHTML = '<span class="close-dot"></span> CLOSE</div>'
-    status.classList.remove('live-pill');
-    status.classList.add('close-pill');
-  }
-}
-getMarketStatus();
-setInterval(getMarketStatus, 60000);
-
 const modelAcc = { lstm: 87.4, rf: 83.1 };
 let activeModel = 'lstm';
 let apiData = null; // Store historical/ML data from API
@@ -384,17 +365,17 @@ function refreshPrediction() {
   const currentPriceElem = document.getElementById('pm-cur');
   const currentPriceChange = document.getElementById('pm-stock');
   currentPriceElem.innerHTML = `NPR ${currentPrice.toFixed(2).toLocaleString()}`;
-  currentPriceChange.innerHTML = `<span class="${isPriceUp ? 'up' : 'dn'}" style="font-size: 12px; margin-left: 8px;">${isPriceUp ? '▲' : '▼'} ${isPriceUp ? '' : '-'}${Math.abs(percentChange).toFixed(2)} %</span>`;
+  currentPriceChange.innerHTML = `${symbol} · Today <span class="${isPriceUp ? 'up' : 'dn'}" style="font-size: 12px; margin-left: 8px;">${isPriceUp ? '▲' : '▼'} ${isPriceUp ? '' : '-'}${Math.abs(percentChange).toFixed(2)}%</span>`;
   
   // Update stock name display (removed LIVE text)
-  document.getElementById('pm-stock').innerHTML = `${symbol} · Today`;
+  // document.getElementById('pm-stock').innerHTML = ;
   
   // Update high display with percentage inline
   const highElem = document.getElementById('pm-high');
   const highElemChgID = document.getElementById('pm-high-chg');
   if (highElem) {
     highElem.innerHTML = `NPR ${todayHigh.toFixed(2).toLocaleString()}`;
-    highElemChgID.innerHTML = `▲ ${Math.abs(highChg).toFixed(2)} %`;
+    highElemChgID.innerHTML = `▲ ${Math.abs(highChg).toFixed(2)}%`;
   }
   
   // Update low display with percentage inline
@@ -402,7 +383,7 @@ function refreshPrediction() {
   const lowElemChgID = document.getElementById('pm-low-chg');
   if (lowElem) {
     lowElem.innerHTML = `NPR ${todayLow.toFixed(2).toLocaleString()}`;
-    lowElemChgID.innerHTML = `▼ -${Math.abs(lowChg).toFixed(2)} %`;
+    lowElemChgID.innerHTML = `▼ -${Math.abs(lowChg).toFixed(2)}%`;
   }
   
   // Update predicted price display with percentage inline
@@ -410,7 +391,7 @@ function refreshPrediction() {
   const predElemChg = document.getElementById('pm-chg');
   if (predElem) {
     predElem.innerHTML = `NPR ${finalPred.toFixed(2).toLocaleString()}`;
-    predElemChg.innerHTML = `<span class="${isPredUp ? 'up' : 'dn'}" style="font-size: 12px; margin-left: 8px;">${isPredUp ? '▲' : '▼'} ${isPredUp ? '' : '-'}${Math.abs(changePct).toFixed(2)} % in ${predData.length} day${predData.length > 1 ? 's' : ''}</span>`
+    predElemChg.innerHTML = `<span class="${isPredUp ? 'up' : 'dn'}" style="font-size: 12px; margin-left: 8px;">${isPredUp ? '▲' : '▼'} ${isPredUp ? '' : '-'}${Math.abs(changePct).toFixed(2)}% in ${predData.length} day${predData.length > 1 ? 's' : ''}</span>`
     predElem.className = 'stat-val';
   }
   

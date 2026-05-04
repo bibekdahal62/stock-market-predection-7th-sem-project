@@ -14,8 +14,8 @@ async function updateTicker(){
       <span class="${i.up ? 'ticker-up' : 'ticker-dn'}">${i.change_percent}%${i.up ? ' ▲ ' : ' ▼ '} </span>
     </span>`
     ).join('');
-    document.getElementById('ticker').innerHTML = tickerHTML + tickerHTML;
+    document.getElementById('ticker').innerHTML = tickerHTML;
 }
 
 updateTicker();
-setInterval(updateTicker, 60000)
+setInterval(updateTicker, 300000)

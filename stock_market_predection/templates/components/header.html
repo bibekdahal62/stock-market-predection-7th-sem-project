@@ -36,11 +36,11 @@
                     {{ request.user.first_name }} {{ request.user.last_name }}
                 </div>
                 <div class="profile-btns">
-                    <a href="{% url 'logout' %}" class="btn-logout">Logout</a>
+                    <!-- <a href="{% url 'logout' %}" class="btn-logout">Sign out</a> -->
                 </div>
             {% else %}
                 <div class="profile-btns">
-                    <a href="{% url 'login' %}" class="btn-login">Login</a>
+                    <a href="{% url 'login' %}" class="btn-login">Sign in</a>
                     <a href="{% url 'register' %}" class="btn-register">Register</a>
                 </div>
             {% endif %}
@@ -71,22 +71,12 @@
                 <span style="font-size:13px; color:var(--text-secondary); font-family:var(--font-body);">
                     {{ request.user.first_name }} {{ request.user.last_name }}
                 </span>
-                <a href="{% url 'logout' %}" class="btn-logout">Logout</a>
+                <a href="{% url 'logout' %}" class="btn-logout">Sign out</a>
             {% else %}
-                <a href="{% url 'login' %}" class="btn-login">Login</a>
+                <a href="{% url 'login' %}" class="btn-login">Sign in</a>
                 <a href="{% url 'register' %}" class="btn-register">Register</a>
             {% endif %}
         </div>
     </div>
 
 </header>
-
-<!-- HAMBURGER TOGGLE SCRIPT -->
-<script>
-    const burger = document.getElementById('hamburger');
-    const drawer = document.getElementById('mobile-nav');
-    burger.addEventListener('click', () => {
-        burger.classList.toggle('open');
-        drawer.classList.toggle('open');
-    });
-</script>

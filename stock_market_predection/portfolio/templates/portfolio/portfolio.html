@@ -93,10 +93,33 @@
         </div>
       </div>
 
-      <a href="{% url 'logout' %}" class="profile-logout-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Sign Out
-      </a>
+      <div class="profile-action-row">
+        <a href="{% url 'logout' %}" class="profile-logout-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </a>
+        <button class="profile-delete-btn" onclick="document.getElementById('delete-modal').style.display='flex'" title="Delete Account">
+          Delete
+        </button>
+      </div>
+
+      <!-- Confirm Modal -->
+      <div class="delete-modal-overlay" id="delete-modal">
+        <div class="delete-modal">
+          <div class="delete-modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h3 class="delete-modal-title">Delete Account?</h3>
+          <p class="delete-modal-sub">This will permanently delete your account and all your portfolio data. This action cannot be undone.</p>
+          <form method="post" action="{% url 'account_delete' %}">
+            {% csrf_token %}
+            <div class="delete-modal-actions">
+              <button type="button" class="delete-cancel-btn" onclick="document.getElementById('delete-modal').style.display='none'">Cancel</button>
+              <button type="submit" class="delete-confirm-btn">Yes, Delete</button>
+            </div>
+          </form>
+        </div>
+      </div>
 
     </aside>
 
@@ -426,36 +449,8 @@ async function deleteHolding(id) {
 loadHoldings();
 
 
-async function marketStatus(){
-    const res = await fetch('/api/market-status/');
-    const data = await res.json();
-    const status = document.querySelector('#market-status');
-
-    if (data.isOpen === 'OPEN') {
-        status.innerHTML = '<span class="live-dot"></span> OPEN</div>'
-        status.classList.remove('close-pill');
-        status.classList.add('live-pill');
-        
-
-        // 👉 start interval ONLY if not already running
-        // if (!marketStatusInterval) {
-        //     marketStatusInterval = setInterval(updateData, 200000); // 10 sec
-        // }
-
-    } else {
-        status.innerHTML = '<span class="close-dot"></span> CLOSE</div>'
-        status.classList.remove('live-pill');
-        status.classList.add('close-pill');
-        // marketTime.innerText = 'As of: ' + formatted;
-
-        // 👉 stop auto refresh when market is closed
-        // if (marketStatusInterval) {
-        //     clearInterval(marketStatusInterval);
-        //     marketStatusInterval = null;
-        // }
-
-    }
-}
-marketStatus();
+document.getElementById('delete-modal').addEventListener('click', function (e) {
+  if (e.target === this) this.style.display = 'none';
+});
 </script>
 {% endblock %}

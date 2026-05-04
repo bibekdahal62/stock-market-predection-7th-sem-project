@@ -212,12 +212,12 @@ from django.db.models import Max
 
 @api_view(['GET'])
 def latest_batch(request):
-    latest_ts = StockData.objects.aggregate(
-        max_ts=Max('timestamp')
-    )['max_ts']
+    latest_ts = StockData.objects.aggregate(max_ts=Max('timestamp'))['max_ts']
+
+    if latest_ts is None:
+        return Response({"detail": "No data available."}, status=404)
 
     qs = StockData.objects.filter(timestamp=latest_ts).order_by('symbol')
-
     serializer = StockDataSerializer(qs, many=True)
     return Response(serializer.data)
 

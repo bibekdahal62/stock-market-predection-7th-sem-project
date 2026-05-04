@@ -9,6 +9,7 @@ class SchedulerAppConfig(AppConfig):
 
     def ready(self):
         from stock_data.tasks import store_data
+        from prediction.tasks import scheduled_prediction_task
         # Prevent double start due to Django reload
         if settings.DEBUG:
             import os
@@ -17,5 +18,6 @@ class SchedulerAppConfig(AppConfig):
 
         scheduler = BackgroundScheduler()
         scheduler.add_job(store_data, 'interval', minutes=1)
+        scheduler.add_job(scheduled_prediction_task, 'cron', hour=11, minute=1)  # Run at 11:01 AM every day
         scheduler.start()
         # print("Scheduler has started....")
