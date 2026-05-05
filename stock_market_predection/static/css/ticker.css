@@ -48,7 +48,7 @@
   display: flex;
   align-items: center;
   gap: 0;
-  animation: ticker-scroll 150s linear infinite;
+  animation: ticker-scroll 240s linear infinite;
   flex-shrink: 0;
   will-change: transform;
 }
@@ -135,7 +135,7 @@
 /* ── Mobile ≤ 640px — compact ── */
 @media (max-width: 640px) {
   .topbar { padding: 5px 0; }
-  .ticker { animation-duration: 120s; }
+  .ticker { animation-duration: 200s; }
   .ticker-item  { padding: 0 10px; gap: 4px; }
   .ticker-sym   { font-size: 10px; }
   .ticker-up,
@@ -148,7 +148,7 @@
 /* ── Small phone ≤ 420px — minimal ── */
 @media (max-width: 420px) {
   .topbar { padding: 4px 0; }
-  .ticker { animation-duration: 100s; }
+  .ticker { animation-duration: 200s; }
   .ticker-item  { padding: 0 8px; gap: 3px; }
   .ticker-sym   { font-size: 9px; }
   .ticker-up,

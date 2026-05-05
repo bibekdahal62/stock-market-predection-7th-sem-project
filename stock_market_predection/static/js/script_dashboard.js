@@ -224,26 +224,19 @@ function manageChartRefreshInterval() {
         clearInterval(chartRefreshInterval);
         chartRefreshInterval = null;
     }
-    
-    // Check if market is open
-    if (isMarketOpen()) {
-        console.log('Chart refresh started - Updating every 60.5 seconds');
-        chartRefreshInterval = setInterval(() => {
-            if (isMarketOpen()) {
-                refreshOneDayChart();
-            } else {
-                // Stop if market closed
-                if (chartRefreshInterval) {
-                    clearInterval(chartRefreshInterval);
-                    chartRefreshInterval = null;
-                }
-            }
-        }, 60500); // 60.5 seconds
-    } else if (isWeekend()) {
-        console.log('Weekend detected - No chart refresh');
-    } else {
-        console.log('Market closed - No chart refresh');
-    }
+
+    console.log('Chart interval started - Checking market status every 60 seconds');
+
+    chartRefreshInterval = setInterval(() => {
+        if (isMarketOpen()) {
+            console.log('Market is OPEN - Refreshing chart...', new Date().toLocaleTimeString());
+            refreshOneDayChart();
+        } else if (isWeekend()) {
+            console.log('Weekend - Market closed, waiting...', new Date().toLocaleTimeString());
+        } else {
+            console.log('Market is CLOSED - Waiting for market to open...', new Date().toLocaleTimeString());
+        }
+    }, 60000);
 }
 
 async function refreshOneDayChart() {
@@ -416,7 +409,7 @@ async function buildIndexChart(tf) {
         
         let autoRefreshText = '';
         if (marketStatusForView === "OPEN" && isMarketOpen()) {
-            autoRefreshText = ' | 🔄 Auto-refresh: 60.5s';
+            autoRefreshText = ' | 🔄 Auto-refresh: 60s';
         }
         
         const marketStatusIcon = marketStatusForView === "OPEN" ? "🟢" : "🔴";
@@ -458,8 +451,8 @@ async function buildIndexChart(tf) {
             labels.push(...newLabels);
             
             // Configure x-axis ticks
-            xAxisConfig.ticks.maxRotation = 0;
-            xAxisConfig.ticks.minRotation = 0;
+            xAxisConfig.ticks.maxRotation = 45;
+            xAxisConfig.ticks.minRotation = 40;
             xAxisConfig.ticks.autoSkip = false;
             xAxisConfig.ticks.maxTicksLimit = targetTicks;
             
@@ -471,8 +464,8 @@ async function buildIndexChart(tf) {
             xAxisConfig.ticks.maxTicksLimit = dataPointCount;
         } else {
             // Show all data points
-            xAxisConfig.ticks.maxRotation = 0;
-            xAxisConfig.ticks.minRotation = 0;
+            xAxisConfig.ticks.maxRotation = 30;
+            xAxisConfig.ticks.minRotation = 30;
             xAxisConfig.ticks.autoSkip = false;
             xAxisConfig.ticks.maxTicksLimit = dataPointCount;
         }
