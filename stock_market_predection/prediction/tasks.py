@@ -68,7 +68,7 @@ def save_prediction(prediction: dict, daily_forecasts: list[dict], ticker: str =
     # 1. Create the parent session (timestamp is auto-set to now)
     session = PredictionSession.objects.create(
         ticker=ticker,
-        # created_at=now,
+        created_at=now,
         last_date=prediction["last_date"],
         last_high=prediction["last_high"],
         last_low=prediction["last_low"],

@@ -109,7 +109,7 @@ class PredictionSession(models.Model):
         help_text="Stock/asset symbol this prediction belongs to.",
     )
     created_at = models.DateTimeField(
-        default=timezone.localtime,
+        # default=timezone.localtime,
         db_index=True,
         help_text="Timestamp when the prediction was generated.",
     )

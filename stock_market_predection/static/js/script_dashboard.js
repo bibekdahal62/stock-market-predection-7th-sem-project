@@ -1,5 +1,7 @@
 let marketStatusInterval = null;
 
+let currentTF = '1D';
+
 async function updateData() {
     const res = await fetch('/api/stock-data/');
     const data = await res.json()
@@ -228,8 +230,11 @@ function manageChartRefreshInterval() {
     console.log('Chart interval started - Checking market status every 60 seconds');
 
     chartRefreshInterval = setInterval(() => {
+        if (currentTF !== '1D') return;
+
         if (isMarketOpen()) {
             console.log('Market is OPEN - Refreshing chart...', new Date().toLocaleTimeString());
+            
             refreshOneDayChart();
         } else if (isWeekend()) {
             console.log('Weekend - Market closed, waiting...', new Date().toLocaleTimeString());
@@ -617,6 +622,7 @@ async function buildIndexChart(tf) {
 }
 
 async function switchTF(btn, tf) {
+    currentTF = tf;
     document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     

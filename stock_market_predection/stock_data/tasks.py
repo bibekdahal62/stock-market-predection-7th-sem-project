@@ -8,10 +8,21 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+IMPORTANT_SECTORS = {
+    "Banking SubIndex",
+    "HydroPower Index",
+    "Life Insurance",
+    "Non Life Insurance",
+    "Development Bank Index",
+    "Hotels And Tourism Index",
+    "Mutual Fund"
+}
 
-def end_day_summary(now, nepse_index, change, per_change, high, low, fiftyTwoWeekHigh, fiftyTwoWeekLow, turnover, shares, transaction_count, scripts, stocks):
+
+
+def end_day_summary(now, nepse_index, change, per_change, high, low, close, previous_close, fiftyTwoWeekHigh, fiftyTwoWeekLow, turnover, shares, transaction_count, scripts, stocks, top_10_active, gainers, loosers, total_listed, advancing, declining, unchanged, postitive_circuit, negative_circuit, sectors):
     # Store end-of-day summary (15:00–15:01)
-    if time(15, 2) <= now.time() <= time(15, 3):
+    if time(15, 1) <= now.time() <= time(15, 2):
         NepseIndex.objects.create(
             date=now.date(),
             close=nepse_index,
@@ -40,7 +51,19 @@ def end_day_summary(now, nepse_index, change, per_change, high, low, fiftyTwoWee
                     traded_quantity= stock['totalTradeQuantity'],
                     traded_amount=stock['totalTradeValue'],
                     status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
-                    )
+                )
+                UpperLive.objects.create(
+                    timestamp = now,
+                    ltp= stock['lastTradedPrice'],
+                    open = stock['openPrice'],
+                    high=stock['highPrice'],
+                    low= stock['lowPrice'],
+                    pr_close= stock['previousClose'],
+                    per_change=stock['percentageChange'],
+                    traded_quantity= stock['totalTradeQuantity'],
+                    traded_amount=stock['totalTradeValue'],
+                    status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
+                )
             elif stock['symbol'] == 'HBL':
                 Hbl.objects.create(
                     published_date = now.date(),
@@ -52,7 +75,19 @@ def end_day_summary(now, nepse_index, change, per_change, high, low, fiftyTwoWee
                     traded_quantity= stock['totalTradeQuantity'],
                     traded_amount=stock['totalTradeValue'],
                     status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
-                    )
+                )
+                HblLive.objects.create(
+                    timestamp = now,
+                    ltp= stock['lastTradedPrice'],
+                    open = stock['openPrice'],
+                    high=stock['highPrice'],
+                    low= stock['lowPrice'],
+                    pr_close= stock['previousClose'],
+                    per_change=stock['percentageChange'],
+                    traded_quantity= stock['totalTradeQuantity'],
+                    traded_amount=stock['totalTradeValue'],
+                    status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
+                )
                 
             StockData.objects.create(
                 timestamp= now,
@@ -66,6 +101,84 @@ def end_day_summary(now, nepse_index, change, per_change, high, low, fiftyTwoWee
                 traded_amount=stock['totalTradeValue'],
             )
         logger.info("End of day stock summary stored...")
+
+        for stock in top_10_active:
+            MostActiveStocks.objects.create(
+                timestamp=now,
+                name=stock.get('securityName'),
+                symbol=stock.get('symbol'),
+                ltp=stock.get('lastTradedPrice'),
+                percentage_change=stock.get('percentageChange'),
+                previous_close=stock.get('previousClose'),
+                total_traded_quantity=stock.get('totalTradeQuantity'),
+                security_id=stock.get('securityId')
+            )
+        logger.info("Top 10 active stocks stored.")
+
+        NepseIndexData.objects.create(
+            timestamp=now,
+            nepse_index=nepse_index,
+            change=change,
+            percentage_change=per_change,
+            high=high,
+            low=low,
+            close=close,
+            prevously_closed=previous_close,
+            fift_two_week_high=fiftyTwoWeekHigh,
+            fift_two_week_low=fiftyTwoWeekLow
+        )
+        logger.info("NEPSE index snapshot stored.")
+
+        for g in gainers:
+            Gainer.objects.create(
+                timestamp=now,
+                symbol=g['symbol'],
+                security_name=g['securityName'],
+                security_id=g['securityId'],
+                ltp=g['ltp'],
+                cp=g['cp'],
+                point_change=g['pointChange'],
+                percentage_change=g['percentageChange'],
+            )
+        logger.info("Gainers snapshot stored.")
+
+        for l in loosers:
+            Loser.objects.create(
+                timestamp=now,
+                symbol=l['symbol'],
+                security_name=l['securityName'],
+                security_id=l['securityId'],
+                ltp=l['ltp'],
+                cp=l['cp'],
+                point_change=l['pointChange'],
+                percentage_change=l['percentageChange'],
+            )
+        logger.info("Losers snapshot stored.")
+
+        MarketBreadth.objects.create(
+            timestamp=now,
+            total_listed=total_listed,
+            advancing=advancing,
+            declining=declining,
+            unchanged=unchanged,
+            positive_circuit=postitive_circuit,
+            negative_circuit=negative_circuit,
+        )
+        logger.info("Market Breadth snapshot stored.")
+
+        for s in sectors:
+            if s.get('index') not in IMPORTANT_SECTORS:
+                continue
+
+            Sector.objects.create(
+                timestamp=now,
+                sector_id=s.get('id'),
+                index_name=s.get('index'),
+                current_value=s.get('currentValue'),
+                change=s.get('change'),
+                percentage_change=s.get('perChange'),
+            )
+        logger.info("Sector snapshot stored.")
     return
 
 
@@ -78,7 +191,7 @@ def store_data():
         status = nepse.get_market_status()
         # ✅ Only run during market days/times
         is_weekday = now.weekday() < 5
-        is_market_time = time(11, 0) <= now.time() <= time(15, 4)
+        is_market_time = time(11, 0) <= now.time() <= time(15, 3)
         is_market_open = status.get('isOpen') != 'CLOSE'
 
 
@@ -171,7 +284,7 @@ def store_data():
         with transaction.atomic():
             if not is_market_open:
                 logger.info("Market closed storing end day summary only...")
-                end_day_summary(now, nepse_index, change, per_change, high, low, fiftyTwoWeekHigh, fiftyTwoWeekLow, turnover, shares, transaction_count, scripts, stocks)
+                end_day_summary(now, nepse_index, change, per_change, high, low, close, previous_close, fiftyTwoWeekHigh, fiftyTwoWeekLow, turnover, shares, transaction_count, scripts, stocks, top_10_active, gainers, loosers, total_listed, advancing, declining, unchanged, postitive_circuit, negative_circuit, sectors)
                 return
 
             # Store Most Active Stocks (11:00–15:00)
@@ -230,19 +343,6 @@ def store_data():
                         percentage_change=l['percentageChange'],
                     )
                 logger.info("Losers snapshot stored.")
-
-
-                IMPORTANT_SECTORS = {
-                    "Banking SubIndex",
-                    "HydroPower Index",
-                    "Life Insurance",
-                    "Non Life Insurance",
-                    "Development Bank Index",
-                    "Hotels And Tourism Index",
-                    "Mutual Fund"
-                }
-
-
 
                 for s in sectors:
                     if s.get('index') not in IMPORTANT_SECTORS:
@@ -314,5 +414,3 @@ def store_data():
                         
     except Exception as e:
         logger.exception(f"Unexpected error in store_data(): {e}")
-
-     
