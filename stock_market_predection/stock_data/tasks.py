@@ -22,163 +22,166 @@ IMPORTANT_SECTORS = {
 
 def end_day_summary(now, nepse_index, change, per_change, high, low, close, previous_close, fiftyTwoWeekHigh, fiftyTwoWeekLow, turnover, shares, transaction_count, scripts, stocks, top_10_active, gainers, loosers, total_listed, advancing, declining, unchanged, postitive_circuit, negative_circuit, sectors):
     # Store end-of-day summary (15:00–15:01)
-    if time(15, 1) <= now.time() <= time(15, 2):
-        NepseIndex.objects.create(
-            date=now.date(),
-            close=nepse_index,
-            high=high,
-            low=low,
-            absolute_change=change,
-            percentage_change=per_change,
-            week_52_high=fiftyTwoWeekHigh,
-            week_52_low=fiftyTwoWeekLow,
-            turnover_values=turnover,
-            turnover_volume=shares,
-            total_transaction=transaction_count,
-            scripts=scripts
-        )
-        logger.info("End-of-day NEPSE summary stored.")
+    # if (time(15, 1) <= now.time() <= time(15, 2)) or (time(10, 58) <= now.time() <= time(10, 59)):
+    NepseIndex.objects.create(
+        date=now.date(),
+        close=nepse_index,
+        high=high,
+        low=low,
+        absolute_change=change,
+        percentage_change=per_change,
+        week_52_high=fiftyTwoWeekHigh,
+        week_52_low=fiftyTwoWeekLow,
+        turnover_values=turnover,
+        turnover_volume=shares,
+        total_transaction=transaction_count,
+        scripts=scripts
+    )
+    logger.info("End-of-day NEPSE summary stored.")
 
-        for stock in stocks:
-            if stock['symbol'] == 'UPPER':
-                Upper.objects.create(
-                    published_date = now.date(),
-                    open = stock['openPrice'],
-                    high=stock['highPrice'],
-                    low= stock['lowPrice'],
-                    close= stock['lastTradedPrice'],
-                    per_change=stock['percentageChange'],
-                    traded_quantity= stock['totalTradeQuantity'],
-                    traded_amount=stock['totalTradeValue'],
-                    status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
-                )
-                UpperLive.objects.create(
-                    timestamp = now,
-                    ltp= stock['lastTradedPrice'],
-                    open = stock['openPrice'],
-                    high=stock['highPrice'],
-                    low= stock['lowPrice'],
-                    pr_close= stock['previousClose'],
-                    per_change=stock['percentageChange'],
-                    traded_quantity= stock['totalTradeQuantity'],
-                    traded_amount=stock['totalTradeValue'],
-                    status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
-                )
-            elif stock['symbol'] == 'HBL':
-                Hbl.objects.create(
-                    published_date = now.date(),
-                    open = stock['openPrice'],
-                    high=stock['highPrice'],
-                    low= stock['lowPrice'],
-                    close= stock['lastTradedPrice'],
-                    per_change=stock['percentageChange'],
-                    traded_quantity= stock['totalTradeQuantity'],
-                    traded_amount=stock['totalTradeValue'],
-                    status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
-                )
-                HblLive.objects.create(
-                    timestamp = now,
-                    ltp= stock['lastTradedPrice'],
-                    open = stock['openPrice'],
-                    high=stock['highPrice'],
-                    low= stock['lowPrice'],
-                    pr_close= stock['previousClose'],
-                    per_change=stock['percentageChange'],
-                    traded_quantity= stock['totalTradeQuantity'],
-                    traded_amount=stock['totalTradeValue'],
-                    status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
-                )
-                
-            StockData.objects.create(
-                timestamp= now,
-                symbol= stock['symbol'],
-                ltp= stock['lastTradedPrice'],
-                change_percent= stock['percentageChange'],
+    for stock in stocks:
+        if stock['symbol'] == 'UPPER':
+            Upper.objects.create(
+                published_date = now.date(),
                 open = stock['openPrice'],
                 high=stock['highPrice'],
                 low= stock['lowPrice'],
+                close= stock['lastTradedPrice'],
+                per_change=stock['percentageChange'],
                 traded_quantity= stock['totalTradeQuantity'],
                 traded_amount=stock['totalTradeValue'],
+                status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
             )
-        logger.info("End of day stock summary stored...")
-
-        for stock in top_10_active:
-            MostActiveStocks.objects.create(
-                timestamp=now,
-                name=stock.get('securityName'),
-                symbol=stock.get('symbol'),
-                ltp=stock.get('lastTradedPrice'),
-                percentage_change=stock.get('percentageChange'),
-                previous_close=stock.get('previousClose'),
-                total_traded_quantity=stock.get('totalTradeQuantity'),
-                security_id=stock.get('securityId')
+            UpperLive.objects.create(
+                timestamp = now,
+                ltp= stock['lastTradedPrice'],
+                open = stock['openPrice'],
+                high=stock['highPrice'],
+                low= stock['lowPrice'],
+                pr_close= stock['previousClose'],
+                per_change=stock['percentageChange'],
+                traded_quantity= stock['totalTradeQuantity'],
+                traded_amount=stock['totalTradeValue'],
+                status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
             )
-        logger.info("Top 10 active stocks stored.")
-
-        NepseIndexData.objects.create(
-            timestamp=now,
-            nepse_index=nepse_index,
-            change=change,
-            percentage_change=per_change,
-            high=high,
-            low=low,
-            close=close,
-            prevously_closed=previous_close,
-            fift_two_week_high=fiftyTwoWeekHigh,
-            fift_two_week_low=fiftyTwoWeekLow
+        elif stock['symbol'] == 'HBL':
+            Hbl.objects.create(
+                published_date = now.date(),
+                open = stock['openPrice'],
+                high=stock['highPrice'],
+                low= stock['lowPrice'],
+                close= stock['lastTradedPrice'],
+                per_change=stock['percentageChange'],
+                traded_quantity= stock['totalTradeQuantity'],
+                traded_amount=stock['totalTradeValue'],
+                status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
+            )
+            HblLive.objects.create(
+                timestamp = now,
+                ltp= stock['lastTradedPrice'],
+                open = stock['openPrice'],
+                high=stock['highPrice'],
+                low= stock['lowPrice'],
+                pr_close= stock['previousClose'],
+                per_change=stock['percentageChange'],
+                traded_quantity= stock['totalTradeQuantity'],
+                traded_amount=stock['totalTradeValue'],
+                status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
+            )
+    
+            
+        StockData.objects.create(
+            timestamp= now,
+            symbol= stock['symbol'],
+            ltp= stock['lastTradedPrice'],
+            change_percent= stock['percentageChange'],
+            open = stock['openPrice'],
+            high=stock['highPrice'],
+            low= stock['lowPrice'],
+            previous_close= stock['previousClose'],
+            traded_quantity= stock['totalTradeQuantity'],
+            traded_amount=stock['totalTradeValue'],
         )
-        logger.info("NEPSE index snapshot stored.")
+    logger.info("End of day stock summary stored...")
 
-        for g in gainers:
-            Gainer.objects.create(
-                timestamp=now,
-                symbol=g['symbol'],
-                security_name=g['securityName'],
-                security_id=g['securityId'],
-                ltp=g['ltp'],
-                cp=g['cp'],
-                point_change=g['pointChange'],
-                percentage_change=g['percentageChange'],
-            )
-        logger.info("Gainers snapshot stored.")
-
-        for l in loosers:
-            Loser.objects.create(
-                timestamp=now,
-                symbol=l['symbol'],
-                security_name=l['securityName'],
-                security_id=l['securityId'],
-                ltp=l['ltp'],
-                cp=l['cp'],
-                point_change=l['pointChange'],
-                percentage_change=l['percentageChange'],
-            )
-        logger.info("Losers snapshot stored.")
-
-        MarketBreadth.objects.create(
+    for stock in top_10_active:
+        MostActiveStocks.objects.create(
             timestamp=now,
-            total_listed=total_listed,
-            advancing=advancing,
-            declining=declining,
-            unchanged=unchanged,
-            positive_circuit=postitive_circuit,
-            negative_circuit=negative_circuit,
+            name=stock.get('securityName'),
+            symbol=stock.get('symbol'),
+            ltp=stock.get('lastTradedPrice'),
+            percentage_change=stock.get('percentageChange'),
+            previous_close=stock.get('previousClose'),
+            total_traded_quantity=stock.get('totalTradeQuantity'),
+            security_id=stock.get('securityId')
         )
-        logger.info("Market Breadth snapshot stored.")
+    logger.info("End of day Top 10 active stocks stored.")
 
-        for s in sectors:
-            if s.get('index') not in IMPORTANT_SECTORS:
-                continue
+    NepseIndexData.objects.create(
+        timestamp=now,
+        nepse_index=nepse_index,
+        change=change,
+        percentage_change=per_change,
+        high=high,
+        low=low,
+        close=close,
+        prevously_closed=previous_close,
+        fift_two_week_high=fiftyTwoWeekHigh,
+        fift_two_week_low=fiftyTwoWeekLow
+    )
+    logger.info("End of day NEPSE index snapshot stored.")
 
-            Sector.objects.create(
-                timestamp=now,
-                sector_id=s.get('id'),
-                index_name=s.get('index'),
-                current_value=s.get('currentValue'),
-                change=s.get('change'),
-                percentage_change=s.get('perChange'),
-            )
-        logger.info("Sector snapshot stored.")
+    for g in gainers:
+        Gainer.objects.create(
+            timestamp=now,
+            symbol=g['symbol'],
+            security_name=g['securityName'],
+            security_id=g['securityId'],
+            ltp=g['ltp'],
+            cp=g['cp'],
+            point_change=g['pointChange'],
+            percentage_change=g['percentageChange'],
+        )
+    logger.info("End of day Gainers snapshot stored.")
+
+    for l in loosers:
+        Loser.objects.create(
+            timestamp=now,
+            symbol=l['symbol'],
+            security_name=l['securityName'],
+            security_id=l['securityId'],
+            ltp=l['ltp'],
+            cp=l['cp'],
+            point_change=l['pointChange'],
+            percentage_change=l['percentageChange'],
+        )
+    logger.info("End of day Losers snapshot stored.")
+
+    MarketBreadth.objects.create(
+        timestamp=now,
+        total_listed=total_listed,
+        advancing=advancing,
+        declining=declining,
+        unchanged=unchanged,
+        positive_circuit=postitive_circuit,
+        negative_circuit=negative_circuit,
+    )
+    logger.info("End of day Market Breadth snapshot stored.")
+
+    for s in sectors:
+        if s.get('index') not in IMPORTANT_SECTORS:
+            continue
+
+        Sector.objects.create(
+            timestamp=now,
+            sector_id=s.get('id'),
+            index_name=s.get('index'),
+            current_value=s.get('currentValue'),
+            change=s.get('change'),
+            percentage_change=s.get('perChange'),
+        )
+    logger.info("End of day Sector snapshot stored.")
+
     return
 
 
@@ -191,7 +194,7 @@ def store_data():
         status = nepse.get_market_status()
         # ✅ Only run during market days/times
         is_weekday = now.weekday() < 5
-        is_market_time = time(11, 0) <= now.time() <= time(15, 3)
+        is_market_time = time(10, 58) <= now.time() <= time(15, 3)
         is_market_open = status.get('isOpen') != 'CLOSE'
 
 
@@ -283,9 +286,10 @@ def store_data():
         # -------- DATABASE OPERATIONS (atomic) --------
         with transaction.atomic():
             if not is_market_open:
-                logger.info("Market closed storing end day summary only...")
-                end_day_summary(now, nepse_index, change, per_change, high, low, close, previous_close, fiftyTwoWeekHigh, fiftyTwoWeekLow, turnover, shares, transaction_count, scripts, stocks, top_10_active, gainers, loosers, total_listed, advancing, declining, unchanged, postitive_circuit, negative_circuit, sectors)
-                return
+                if ((time(15, 1) <= now.time() <= time(15, 2)) or (time(10, 58) <= now.time() <= time(11, 0))):
+                    logger.info("Market closed storing end day summary only...")
+                    end_day_summary(now, nepse_index, change, per_change, high, low, close, previous_close, fiftyTwoWeekHigh, fiftyTwoWeekLow, turnover, shares, transaction_count, scripts, stocks, top_10_active, gainers, loosers, total_listed, advancing, declining, unchanged, postitive_circuit, negative_circuit, sectors)
+                    return
 
             # Store Most Active Stocks (11:00–15:00)
             if time(11, 0) <= now.time() <= time(15, 1):
@@ -397,7 +401,10 @@ def store_data():
                             status = -1 if stock['percentageChange'] < 0 else (1 if stock['percentageChange'] > 0 else 0)
                             )
 
-                    if ((time(11, 1) <= now.time() <= time(11, 2)) or (time(12, 0) <= now.time() <= time(12, 1)) or (time(13, 0) <= now.time() <= time(13, 1)) or (time(14, 0) <= now.time() <= time(14, 1))):
+                    CHECK_TIMES = [(11, 0), (11, 30), (12, 0), (12, 30), (13, 0), (13, 30), (14, 0), (14, 30)]
+                    CHECK_WINDOW_MINUTES = 1
+
+                    if any(time(h, m) <= now.time() <= time(h, m + CHECK_WINDOW_MINUTES) for h, m in CHECK_TIMES):
                         StockData.objects.create(
                             timestamp= now,
                             symbol= stock['symbol'],
@@ -406,6 +413,7 @@ def store_data():
                             open = stock['openPrice'],
                             high=stock['highPrice'],
                             low= stock['lowPrice'],
+                            previous_close= stock['previousClose'],
                             traded_quantity= stock['totalTradeQuantity'],
                             traded_amount=stock['totalTradeValue'],
                         )

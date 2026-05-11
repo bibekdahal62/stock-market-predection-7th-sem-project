@@ -129,13 +129,13 @@ def scheduled_prediction_task():
     """
     for stock in stock_name_:
         try:
-            nepse = Nepse()
-            status = nepse.get_market_status()
+            # nepse = Nepse()
+            # status = nepse.get_market_status()
             # print(status)
 
-            if status.get('isOpen') == 'CLOSE':
-                logger.info('Market is currently close.. Skipping prediction data store.')
-                return
+            # if status.get('isOpen') == 'CLOSE':
+            #     logger.info('Market is currently close.. Skipping prediction data store.')
+            #     return
             
             qs = stock_models[stock].objects.all().values()   # gets dict with field names
         

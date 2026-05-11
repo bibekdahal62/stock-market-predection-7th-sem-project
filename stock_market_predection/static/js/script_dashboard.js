@@ -590,11 +590,11 @@ async function buildIndexChart(tf) {
                             const value = context.parsed.y;
                             if (tf === '1D') {
                                 const item = filteredData[context.dataIndex];
-                                return [`NPR ${value.toFixed(2)}`, `Time: ${new Date(item.timestamp).toLocaleTimeString()}`];
+                                return [` ${value.toFixed(2)}`, `Time: ${new Date(item.timestamp).toLocaleTimeString()}`];
                             } else {
                                 const item = filteredData[context.dataIndex];
                                 return [
-                                    `NPR ${value.toFixed(2)}`,
+                                    ` ${value.toFixed(2)}`,
                                     `Change: ${parseFloat(item.absolute_change).toFixed(2)} (${parseFloat(item.percentage_change).toFixed(2)}%)`,
                                     `High: ${parseFloat(item.high).toFixed(2)}`,
                                     `Low: ${parseFloat(item.low).toFixed(2)}`

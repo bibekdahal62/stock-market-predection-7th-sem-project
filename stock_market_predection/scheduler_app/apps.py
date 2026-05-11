@@ -19,6 +19,6 @@ class SchedulerAppConfig(AppConfig):
 
         scheduler = BackgroundScheduler(timezone='Asia/Kathmandu')  # Set your timezone
         scheduler.add_job(store_data, 'interval', minutes=1)
-        scheduler.add_job(scheduled_prediction_task, 'cron', hour=11, minute=1)  # Run at 11:01 AM every day
+        scheduler.add_job(scheduled_prediction_task, 'cron', hour=15, minute=2)  # Run at 3:02 PM every day
         scheduler.start()
         atexit.register(lambda: scheduler.shutdown())

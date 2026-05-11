@@ -221,7 +221,62 @@ function getPercentageChange() {
   return 0;
 }
 
-// ✅ NEW: Only updates price, high, low every minute — no chart rebuild
+/* ══════════════════════════════════════
+   MARKET STATUS HELPER
+   Returns true if the market is currently open
+   based on the #market-status pill in the DOM.
+══════════════════════════════════════ */
+function isMarketOpen() {
+  const marketStatusEl = document.querySelector('#market-status');
+  return marketStatusEl ? marketStatusEl.classList.contains('live-pill') : false;
+}
+
+/* ══════════════════════════════════════
+   NEXT TRADING DAY LABEL HELPER
+   If the market is open  → first prediction = "Today"
+   If the market is closed → first prediction = next weekday label
+   Subsequent days always advance from that base date.
+══════════════════════════════════════ */
+function getFirstPredLabel() {
+  if (isMarketOpen()) return 'Today';
+
+  // Find the next weekday from today
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' });
+}
+
+/* Returns the date object for prediction day i (0-indexed).
+   When the market is open, i=0 is today; otherwise i=0 is the
+   next trading weekday. */
+function getPredDate(i) {
+  const base = new Date();
+  if (!isMarketOpen()) {
+    // Advance to next weekday first
+    base.setDate(base.getDate() + 1);
+    while (base.getDay() === 0 || base.getDay() === 6) base.setDate(base.getDate() + 1);
+    // Now advance i more trading days
+    let count = 0;
+    while (count < i) {
+      base.setDate(base.getDate() + 1);
+      while (base.getDay() === 0 || base.getDay() === 6) base.setDate(base.getDate() + 1);
+      count++;
+    }
+  } else {
+    // Market open: i=0 is today, advance i trading days
+    let count = 0;
+    while (count < i) {
+      base.setDate(base.getDate() + 1);
+      while (base.getDay() === 0 || base.getDay() === 6) base.setDate(base.getDate() + 1);
+      count++;
+    }
+  }
+  return base;
+}
+
+// Only updates price, high, low every minute — no chart rebuild
 function updateLiveDisplay() {
   if (!currentLiveData && !apiData) return;
 
@@ -265,7 +320,7 @@ function updateLiveDisplay() {
   }
 }
 
-// ✅ Full UI + chart build — called once on load / stock / model / horizon change
+// Full UI + chart build — called once on load / stock / model / horizon change
 function refreshPrediction() {
   if (!apiData) {
     console.log('Waiting for API data...');
@@ -336,8 +391,14 @@ function refreshPrediction() {
     topPredChange.className = isPredUp ? 'up' : 'dn';
   }
 
-  // Chart labels
-  const predLabels = predData.map((_, i) => i === 0 ? 'Tomorrow' : `Day ${i + 1}`);
+  // Chart labels — use smart first-prediction label
+  const firstLabel = getFirstPredLabel();
+  const predLabels = predData.map((_, i) => {
+    if (i === 0) return firstLabel;
+    const d = getPredDate(i);
+    return `${d.getMonth() + 1}/${d.getDate()}`;
+  });
+
   const labels = [...histLabels, ...predLabels];
   const histFull = [...histPrices];
   const predFull = [...Array(histPrices.length).fill(null), ...predData];
@@ -495,22 +556,20 @@ function refreshPrediction() {
 
 function buildPredTable(currentPrice, predData, upBand, loBand) {
   const tbody = document.getElementById('pred-price-tbody');
-  const today = new Date();
-  let dayCount = 0;
 
   const rows = predData.map((price, i) => {
-    let date = new Date(today);
-    dayCount++;
-    date.setDate(today.getDate() + dayCount);
-    while (date.getDay() === 0 || date.getDay() === 6) {
-      dayCount++;
-      date.setDate(today.getDate() + dayCount);
-    }
-
+    const date = getPredDate(i);
     const chg = ((price - currentPrice) / currentPrice * 100);
     const isUp = chg >= 0;
     const dateStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-    const dayLabel = i === 0 ? 'Tomorrow' : `Day ${i + 1}`;
+
+    // Day label: "Today" if market open + i===0, else "Tomorrow" if market closed + i===0, else "Day N"
+    let dayLabel;
+    if (i === 0) {
+      dayLabel = isMarketOpen() ? 'Today' : 'Tomorrow';
+    } else {
+      dayLabel = `Day ${i + 1}`;
+    }
 
     return `<tr>
       <td>${dayLabel}</td>
@@ -566,12 +625,11 @@ function buildVolChart() {
   });
 }
 
-// ✅ Every 1 minute: fetch live data + update only price, high, low
+// Every 1 minute: fetch live data + update only price, high, low
 async function liveDataChange() {
   try {
     const symbol = document.getElementById('stock-sel').value;
-    const marketStatusEl = document.querySelector('#market-status');
-    const isMarketOpen = marketStatusEl && marketStatusEl.classList.contains('live-pill');
+    const marketOpen = isMarketOpen();
 
     const res = await fetch(`/prediction/live-stock-data/${symbol}/`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -585,7 +643,7 @@ async function liveDataChange() {
       const now = data?.[0]?.timestamp ? new Date(data[0].timestamp) : new Date();
       const formattedDate = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
       const formattedTime = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
-      updateIndicator.innerHTML = `Last updated: ${formattedDate} at ${formattedTime} ${isMarketOpen ? '• LIVE' : ''}`;
+      updateIndicator.innerHTML = `Last updated: ${formattedDate} at ${formattedTime} ${marketOpen ? '• LIVE' : ''}`;
       updateIndicator.style.fontSize = '14px';
       updateIndicator.style.color = '#505761';
       updateIndicator.style.padding = '8px 12px';
@@ -593,7 +651,7 @@ async function liveDataChange() {
       updateIndicator.style.borderBottom = '1px solid rgba(154,162,174,0.2)';
     }
 
-    // ✅ Only update price/high/low — chart stays untouched
+    // Only update price/high/low — chart stays untouched
     updateLiveDisplay();
 
     console.log("Live data updated successfully");
@@ -611,51 +669,8 @@ async function liveDataChange() {
   }
 }
 
-// ✅ Only updates price, high, low — no chart/table/signal rebuild
-function updateLiveDisplay() {
-  if (!currentLiveData && !apiData) return;
-
-  const currentPrice = getCurrentPrice();
-  const todayHigh = getTodayHigh();
-  const todayLow = getTodayLow();
-  const percentChange = getPercentageChange();
-  const isPriceUp = percentChange >= 0;
-  const symbol = document.getElementById('stock-sel').value.toUpperCase();
-
-  if (currentPrice === 0) return;
-
-  // Current price
-  const currentPriceElem = document.getElementById('pm-cur');
-  if (currentPriceElem) currentPriceElem.innerHTML = `NPR ${currentPrice.toFixed(2).toLocaleString()}`;
-
-  // Stock label + % change
-  const currentPriceChange = document.getElementById('pm-stock');
-  if (currentPriceChange) {
-    currentPriceChange.innerHTML = `${symbol} · Today <span class="${isPriceUp ? 'up' : 'dn'}" style="font-size: 12px; margin-left: 8px;">${isPriceUp ? '▲' : '▼'} ${Math.abs(percentChange).toFixed(2)}%</span>`;
-  }
-
-  // Today's high
-  const highElem = document.getElementById('pm-high');
-  const highElemChgID = document.getElementById('pm-high-chg');
-  if (highElem) {
-    const highChg = ((todayHigh - currentPrice) / currentPrice * 100).toFixed(2);
-    highElem.innerHTML = `NPR ${todayHigh.toFixed(2).toLocaleString()}`;
-    if (highElemChgID) highElemChgID.innerHTML = `▲ ${Math.abs(highChg).toFixed(2)}%`;
-  }
-
-  // Today's low
-  const lowElem = document.getElementById('pm-low');
-  const lowElemChgID = document.getElementById('pm-low-chg');
-  if (lowElem) {
-    const lowChg = ((todayLow - currentPrice) / currentPrice * 100).toFixed(2);
-    lowElem.innerHTML = `NPR ${todayLow.toFixed(2).toLocaleString()}`;
-    if (lowElemChgID) lowElemChgID.innerHTML = `▼ -${Math.abs(lowChg).toFixed(2)}%`;
-  }
-}
-
 function startLiveDataUpdates() {
   if (liveDataInterval) clearInterval(liveDataInterval);
-  // ✅ Every 1 min: only fetches live data + updates price/high/low
   liveDataInterval = setInterval(liveDataChange, 60000);
 }
 

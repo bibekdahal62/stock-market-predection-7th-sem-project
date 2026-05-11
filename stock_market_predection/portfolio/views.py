@@ -43,6 +43,7 @@ def api_ltp(request):
         'open':           entry.open,
         'high':           entry.high,
         'low':            entry.low,
+        'previous_close': float(entry.previous_close) if entry.previous_close else None,
         'traded_quantity': entry.traded_quantity,
         'traded_amount':  float(entry.traded_amount) if entry.traded_amount else None,
         'timestamp':      entry.timestamp.isoformat(),
@@ -74,7 +75,8 @@ def api_portfolio_list(request):
         qty = item.quantity
         invested = buy_price * qty
         current_val = ltp * qty if ltp else invested
-        gl = current_val - invested
+        previous_close = float(latest.previous_close) if latest and latest.previous_close else buy_price
+        gl = current_val - (previous_close * qty)
         ret = (gl / invested * 100) if invested else 0
 
         data.append({
@@ -86,6 +88,7 @@ def api_portfolio_list(request):
             'change_percent': change_percent,
             'up':             up,
             'invested':       invested,
+            'previous_close': previous_close,
             'current_value':  current_val,
             'gain_loss':      gl,
             'return_pct':     ret,

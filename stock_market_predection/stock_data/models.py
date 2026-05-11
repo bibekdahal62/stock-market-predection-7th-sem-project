@@ -173,6 +173,7 @@ class StockData(models.Model):
     open = models.FloatField(null=True, blank=True)
     high = models.FloatField(null=True, blank=True)
     low = models.FloatField(null=True, blank=True)
+    previous_close = models.FloatField(null=True, blank=True)
     traded_quantity = models.FloatField(null=True, blank=True)
     traded_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
 

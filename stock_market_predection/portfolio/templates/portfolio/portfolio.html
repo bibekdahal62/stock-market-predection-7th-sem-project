@@ -204,11 +204,12 @@
               <tr>
                 <th>Symbol</th>
                 <th>Qty</th>
-                <th>Avg. Buy</th>
-                <th>LTP</th>
-                <th>Invested</th>
-                <th>Curr. Value</th>
-                <th>Gain / Loss</th>
+                <th>Avg. Buy <br>(NPR)</th>
+                <th>Invested <br>(NPR)</th>
+                <th>Prev. Close <br>(NPR)</th>
+                <th>LTP <br>(NPR)</th>
+                <th>Curr. Value <br>(NPR)</th>
+                <th>Gain / Loss <br>(NPR)</th>
                 <th>Return %</th>
                 <th></th>
               </tr>
@@ -313,11 +314,12 @@ function renderTable(holdings) {
           : ''}
       </td>
       <td>${fmtNum(h.quantity, 0)}</td>
-      <td>NPR ${fmtNum(h.buy_price)}</td>
-      <td>${h.ltp != null ? 'NPR ' + fmtNum(h.ltp) : '<span class="sym-loading">—</span>'}</td>
-      <td>NPR ${fmtNum(h.invested)}</td>
-      <td>NPR ${fmtNum(h.current_value)}</td>
-      <td class="${colorCls(gl)}">${arrow(gl)} NPR ${fmtNum(Math.abs(gl))}</td>
+      <td>${fmtNum(h.buy_price)}</td>
+      <td>${fmtNum(h.invested)}</td>
+      <td>${h.previous_close != null ? fmtNum(h.previous_close) : '<span class="sym-loading">—</span>'}</td>
+      <td>${h.ltp != null ? fmtNum(h.ltp) : '<span class="sym-loading">—</span>'}</td>
+      <td>${fmtNum(h.current_value)}</td>
+      <td class="${colorCls(gl)}">${arrow(gl)} ${fmtNum(Math.abs(gl))}</td>
       <td class="${colorCls(ret)}">${arrow(ret)} ${fmtNum(Math.abs(ret))}%</td>
       <td>
         <button class="del-btn" data-id="${h.id}" title="Remove">
@@ -361,6 +363,9 @@ function updateSummary(holdings) {
   const gl  = totalCurrent - totalInvested;
   const ret = totalInvested > 0 ? (gl / totalInvested) * 100 : 0;
 
+  // Today's gain = sum of per-holding gain_loss (ltp*qty - prev_close*qty)
+  const todayGain = holdings.reduce((s, h) => s + h.gain_loss, 0);
+
   elInvested.textContent = fmtCur(totalInvested);
   elCurrent.textContent  = fmtCur(totalCurrent);
 
@@ -370,8 +375,8 @@ function updateSummary(holdings) {
   elReturn.textContent = arrow(ret) + ' ' + fmtNum(Math.abs(ret)) + '%';
   elReturn.className   = 'pf-summary-val ' + colorCls(ret);
 
-  elSideGain.textContent = (gl >= 0 ? '+' : '') + fmtCur(gl);
-  elSideGain.className   = 'profile-stat-val ' + colorCls(gl);
+  elSideGain.textContent = (todayGain >= 0 ? '+' : '') + fmtCur(todayGain);
+  elSideGain.className   = 'profile-stat-val ' + colorCls(todayGain);
   elSideCount.textContent = holdings.length;
 }
 
@@ -447,7 +452,6 @@ async function deleteHolding(id) {
    INIT
 ══════════════════════════════════════ */
 loadHoldings();
-
 
 document.getElementById('delete-modal').addEventListener('click', function (e) {
   if (e.target === this) this.style.display = 'none';
