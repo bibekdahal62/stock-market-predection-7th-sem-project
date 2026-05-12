@@ -228,10 +228,10 @@ def store_data():
             for stock in stocks:
                 change = stock.get("percentageChange")
 
-                if change >= 14:
+                if change >= 14.8:
                     postitive_circuit += 1
                     advancing += 1
-                elif change <= -14:
+                elif change <= -14.8:
                     negative_circuit += 1
                     declining += 1
                 elif change > 0:
