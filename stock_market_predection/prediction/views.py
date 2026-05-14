@@ -144,6 +144,34 @@ def prediction_data_(request, stock):
         })
 
 
+@api_view(['GET'])
+def all_prediction_data(request, stock):
+    if stock in stock_names:
+        all_sessions = PredictionSession.objects.filter(ticker=stock.upper()).order_by('-created_at')
+        
+        sessions_data = []
+        for session in all_sessions:
+            session_serializer = PredictionSessionSerializer(session)
+            forecasts = session.daily_forecasts.order_by("day")
+            forecast_serializer = DailyForecastSerializer(forecasts, many=True)
+            
+            sessions_data.append({
+                'lstm_pred': session_serializer.data,
+                'rf_pred': forecast_serializer.data,
+            })
+
+        return Response({
+            'message': 'success',
+            'error': False,
+            'predictions': sessions_data,
+        })
+    else:
+        return Response({
+            'message': 'Stock name not found...',
+            'error': True,
+            'predictions': None,
+        })
+
 
 @api_view(['GET'])
 def live_stock_data(request, stock):
