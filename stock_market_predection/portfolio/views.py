@@ -11,7 +11,9 @@ from .models import PortfolioItem
 
 @login_required
 def portfolio_view(request):
-    return render(request, 'portfolio/portfolio.html')
+    return render(request, 'portfolio/portfolio.html', {
+        'title': 'Portfolio - Hamro Stock',
+    })
 
 
 @login_required

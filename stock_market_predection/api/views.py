@@ -180,7 +180,7 @@ def index_chart_latest(request):
         # Convert to datetime
         dt_object = datetime.fromisoformat(dt_string)
         # print(dt_object)
-
+        # dt = datetime(2026, 5, 14, 15, 0)
         # Fetch today's NEPSE data
         
         results = NepseIndexData.objects.filter(timestamp__date=dt_object.date())

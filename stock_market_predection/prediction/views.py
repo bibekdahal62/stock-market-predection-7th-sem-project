@@ -17,7 +17,7 @@ BASE= Path(__file__).resolve().parent.parent
 def index(request):
 
     return render(request, 'prediction/pred.html', {
-        'title': 'Predict Stocks',
+        'title': 'Predict Stocks - Hamro Stock',
     })
 
 
